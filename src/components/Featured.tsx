@@ -7,16 +7,10 @@ type Props = {
   onSelect: (nft: Nft) => void
 }
 
-const STACK_OFFSETS = [
-  { rotate: 0, y: 0, x: 0, scale: 1 },
-  { rotate: -5, y: 16, x: -10, scale: 0.96 },
-  { rotate: 4.5, y: 32, x: 12, scale: 0.92 },
-]
-
-const DESKTOP_STACK_OFFSETS = [
-  { rotate: 0, y: 0, x: 0, scale: 1 },
-  { rotate: -4, y: 20, x: -14, scale: 0.965 },
-  { rotate: 3.5, y: 40, x: 16, scale: 0.93 },
+/** Back cards peek from behind the top — image only, no text */
+const PEEK_OFFSETS = [
+  { rotate: -3.5, y: -10, x: -12, scale: 0.94 },
+  { rotate: 4, y: -20, x: 14, scale: 0.88 },
 ]
 
 function shuffle<T>(items: T[]) {
@@ -49,7 +43,7 @@ export function Featured({ onSelect }: Props) {
 
         <FeaturedStack deck={deck} onSelect={onSelect} />
 
-        <p className="mt-5 text-center text-[11px] uppercase tracking-[0.22em] text-ink-soft">
+        <p className="mt-6 text-center text-[11px] uppercase tracking-[0.22em] text-ink-soft">
           Swipe or drag to reveal the next
         </p>
       </div>
@@ -64,6 +58,7 @@ function FeaturedStack({ deck, onSelect }: { deck: Nft[]; onSelect: (nft: Nft) =
   const top = deck[cursor % deck.length]
   const mid = deck[(cursor + 1) % deck.length]
   const bot = deck[(cursor + 2) % deck.length]
+  const peekCards = [bot, mid]
 
   const dismiss = (direction: 1 | -1) => {
     setExitX(direction * 360)
@@ -76,31 +71,50 @@ function FeaturedStack({ deck, onSelect }: { deck: Nft[]; onSelect: (nft: Nft) =
   }
 
   return (
-    <div className="relative mx-auto h-[min(72vw+88px,420px)] w-full max-w-[340px] touch-pan-y md:h-[480px] md:max-w-[400px] lg:max-w-[440px]">
-      {[bot, mid].map((nft, i) => (
-        <BackCard key={`${nft.id}-back-${i}`} nft={nft} stackIndex={i + 1} onSelect={onSelect} />
-      ))}
+    <div className="featured-stack-wrap mx-auto flex flex-col items-center">
+      <div className="featured-stack relative w-full touch-pan-y">
+        {peekCards.map((nft, i) => {
+          const stackIndex = i + 1
+          const offset = PEEK_OFFSETS[i]
+          return (
+            <motion.div
+              key={`peek-${nft.id}-${stackIndex}`}
+              className="pointer-events-none absolute inset-x-0 top-6 origin-top"
+              style={{ zIndex: stackIndex }}
+              animate={{
+                x: offset.x,
+                y: offset.y,
+                rotate: offset.rotate,
+                scale: offset.scale,
+              }}
+              transition={{ type: 'spring', stiffness: 280, damping: 28 }}
+            >
+              <PeekCard nft={nft} />
+            </motion.div>
+          )
+        })}
 
-      <AnimatePresence mode="popLayout" initial={false}>
-        <motion.div
-          key={`${top.id}-${cursor}`}
-          className="absolute inset-x-0 top-0 origin-top"
-          style={{ zIndex: 10 }}
-          initial={{ x: exitX, opacity: 0, rotate: 0, scale: 0.98 }}
-          animate={{ x: 0, y: 0, rotate: 0, scale: 1, opacity: 1 }}
-          exit={{ x: exitX, opacity: 0, rotate: exitX * 0.05, scale: 0.95 }}
-          transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.85}
-          onDragEnd={onDragEnd}
-          whileDrag={{ scale: 1.02, cursor: 'grabbing' }}
-        >
-          <FeaturedCard nft={top} onSelect={onSelect} />
-        </motion.div>
-      </AnimatePresence>
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.div
+            key={`${top.id}-${cursor}`}
+            className="absolute inset-x-0 top-6 origin-top"
+            style={{ zIndex: 10 }}
+            initial={{ x: exitX, opacity: 0, rotate: 0, scale: 0.98 }}
+            animate={{ x: 0, y: 0, rotate: 0, scale: 1, opacity: 1 }}
+            exit={{ x: exitX, opacity: 0, rotate: exitX * 0.05, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 280, damping: 28 }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.85}
+            onDragEnd={onDragEnd}
+            whileDrag={{ scale: 1.02, cursor: 'grabbing' }}
+          >
+            <FeaturedCard nft={top} onSelect={onSelect} />
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
-      <div className="pointer-events-none absolute -bottom-2 left-1/2 flex -translate-x-1/2 gap-2">
+      <div className="mt-4 flex gap-2">
         {deck.map((nft, i) => (
           <span
             key={nft.id}
@@ -114,44 +128,23 @@ function FeaturedStack({ deck, onSelect }: { deck: Nft[]; onSelect: (nft: Nft) =
   )
 }
 
-function BackCard({
-  nft,
-  stackIndex,
-  onSelect,
-}: {
-  nft: Nft
-  stackIndex: number
-  onSelect: (nft: Nft) => void
-}) {
+/** Image-only card for stack peek — no metadata overlap */
+function PeekCard({ nft }: { nft: Nft }) {
   return (
-    <>
-      <motion.div
-        className="pointer-events-none absolute inset-x-0 top-0 origin-top md:hidden"
-        style={{ zIndex: stackIndex }}
-        animate={{
-          x: STACK_OFFSETS[stackIndex].x,
-          y: STACK_OFFSETS[stackIndex].y,
-          rotate: STACK_OFFSETS[stackIndex].rotate,
-          scale: STACK_OFFSETS[stackIndex].scale,
-        }}
-        transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-      >
-        <FeaturedCard nft={nft} onSelect={onSelect} />
-      </motion.div>
-      <motion.div
-        className="pointer-events-none absolute inset-x-0 top-0 hidden origin-top md:block"
-        style={{ zIndex: stackIndex }}
-        animate={{
-          x: DESKTOP_STACK_OFFSETS[stackIndex].x,
-          y: DESKTOP_STACK_OFFSETS[stackIndex].y,
-          rotate: DESKTOP_STACK_OFFSETS[stackIndex].rotate,
-          scale: DESKTOP_STACK_OFFSETS[stackIndex].scale,
-        }}
-        transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-      >
-        <FeaturedCard nft={nft} onSelect={onSelect} />
-      </motion.div>
-    </>
+    <div
+      aria-hidden
+      className="featured-peek glass overflow-hidden rounded-[clamp(1rem,3vw,1.6rem)] p-[clamp(0.5rem,2vw,0.85rem)] shadow-[0_16px_40px_rgba(26,22,48,0.1)]"
+    >
+      <div className="overflow-hidden rounded-[clamp(0.75rem,2vw,1.15rem)] bg-gradient-to-br from-cream/40 to-sky/30">
+        <img
+          src={nft.src}
+          alt=""
+          loading="lazy"
+          draggable={false}
+          className="aspect-square w-full object-cover"
+        />
+      </div>
+    </div>
   )
 }
 
@@ -162,8 +155,8 @@ function FeaturedCard({ nft, onSelect }: { nft: Nft; onSelect: (nft: Nft) => voi
       onClick={() => onSelect(nft)}
       className="group relative w-full cursor-grab text-left active:cursor-grabbing"
     >
-      <div className="glass overflow-hidden rounded-[1.6rem] p-3 shadow-[0_20px_50px_rgba(26,22,48,0.12)] md:p-4">
-        <div className="overflow-hidden rounded-[1.15rem] bg-gradient-to-br from-cream/40 to-sky/30">
+      <div className="glass overflow-hidden rounded-[clamp(1rem,3vw,1.6rem)] p-[clamp(0.5rem,2vw,0.85rem)] shadow-[0_20px_50px_rgba(26,22,48,0.12)] md:p-4">
+        <div className="overflow-hidden rounded-[clamp(0.75rem,2vw,1.15rem)] bg-gradient-to-br from-cream/40 to-sky/30">
           <img
             src={nft.src}
             alt={nft.title}
@@ -172,12 +165,18 @@ function FeaturedCard({ nft, onSelect }: { nft: Nft; onSelect: (nft: Nft) => voi
             className="aspect-square w-full object-cover transition duration-700 group-hover:scale-105"
           />
         </div>
-        <div className="flex items-end justify-between gap-3 px-2 pb-1 pt-4">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.22em] text-royal-soft">{nft.vibe}</p>
-            <h3 className="font-display mt-1 text-2xl text-ink">{nft.title}</h3>
+        <div className="flex items-end justify-between gap-3 px-1 pb-0.5 pt-[clamp(0.65rem,2vw,1rem)] md:px-2 md:pt-4">
+          <div className="min-w-0">
+            <p className="text-[clamp(9px,2.2vw,11px)] uppercase tracking-[0.22em] text-royal-soft">
+              {nft.vibe}
+            </p>
+            <h3 className="font-display mt-0.5 truncate text-[clamp(1.25rem,4.5vw,1.5rem)] leading-tight text-ink">
+              {nft.title}
+            </h3>
           </div>
-          <span className="text-xs tracking-wider text-ink-soft">{nft.edition}</span>
+          <span className="shrink-0 text-[clamp(10px,2.2vw,12px)] tracking-wider text-ink-soft">
+            {nft.edition}
+          </span>
         </div>
       </div>
     </motion.button>

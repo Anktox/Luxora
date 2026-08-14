@@ -151,6 +151,21 @@
       transparent 68%
     );
   }
+
+  /* Featured card stack — scales with viewport */
+  .featured-stack-wrap {
+    width: clamp(260px, 88vw, 440px);
+  }
+
+  .featured-stack {
+    /* square image + meta row + top peek room */
+    height: calc(clamp(260px, 88vw, 440px) + clamp(4.5rem, 12vw, 5.5rem) + 1.5rem);
+  }
+
+  .featured-peek {
+    /* hide any bleed — image only */
+    max-height: clamp(260px, 88vw, 440px);
+  }
 }
 
 /* Very large / ultrawide screens: let content breathe wider */
