@@ -13,7 +13,7 @@ export function Hero() {
         <img
           src="/assets/hero.webp"
           alt="Luxora — Born from clouds. Carrying light."
-          className="h-full w-full object-cover object-[center_42%]"
+          className="hero-img h-full w-full object-cover md:object-[center_42%]"
           fetchPriority="high"
         />
         <div className="absolute inset-x-0 bottom-0 h-[28%] bg-gradient-to-t from-[#1a1630]/50 to-transparent" />

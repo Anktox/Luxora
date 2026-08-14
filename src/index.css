@@ -108,3 +108,26 @@
     color: transparent;
   }
 }
+
+/* Portrait phones: show the full square art instead of a zoomed crop */
+@media (max-aspect-ratio: 10/16) {
+  .hero-img {
+    object-fit: contain;
+    object-position: center;
+  }
+}
+
+/* Ultrawide: show the full art instead of heavy top/bottom cropping */
+@media (min-aspect-ratio: 21/9) {
+  .hero-img {
+    object-fit: contain;
+    object-position: center;
+  }
+}
+
+/* Very large / ultrawide screens: let content breathe wider */
+@media (min-width: 2400px) {
+  .max-w-6xl {
+    max-width: min(1600px, 74vw);
+  }
+}
