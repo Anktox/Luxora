@@ -10,56 +10,85 @@ export const worldCopy = {
 }
 
 export const collectionStats = [
-  { label: 'Luxora', value: '10,000' },
-  { label: 'Trait options', value: '104' },
-  { label: 'Categories', value: '6' },
-  { label: 'Combinations', value: '23M+' },
+  { label: 'Total Supply', value: '10,000', accent: 'from-cream/60 to-gold/30' },
+  { label: 'Mint Price', value: '$1', accent: 'from-sky/50 to-royal-soft/30' },
+  { label: 'Unique Traits', value: '120+', accent: 'from-blush/50 to-mist/40' },
+  { label: 'Trait Layers', value: '7', accent: 'from-gold/35 to-cream/50' },
 ]
 
-export const traits = [
+export const collectionLayers = [
   {
-    key: 'clouds',
-    name: 'Clouds',
-    count: 18,
-    line: 'Where they came from.',
-    detail: 'From peaceful celestial skies to mythical formations — clouds set the atmosphere of every Luxora.',
-  },
-  {
-    key: 'eyes',
-    name: 'Eyes',
-    count: 18,
-    line: 'Every Luxora sees differently.',
-    detail: 'The signature of a Luxora. Calm, celestial, burning, ancient — each eye carries its own narrative.',
-  },
-  {
-    key: 'body',
-    name: 'Body',
-    count: 18,
-    line: 'The vessel carrying the light.',
-    detail: 'Ornamental patterns and mystical textures transform the same form into something entirely new.',
-  },
-  {
-    key: 'left',
-    name: 'Left Charm',
-    count: 20,
-    line: 'Small objects. Bigger stories.',
-    detail: 'Ceremonial, mysterious, celestial, or ancient — personality hangs on the left.',
-  },
-  {
-    key: 'right',
-    name: 'Right Charm',
-    count: 20,
-    line: 'A story told in pairs.',
-    detail: 'Sometimes the two sides rhyme. Sometimes they argue. Always they belong.',
+    key: 'background',
+    name: 'Background',
+    order: 1,
+    rarity: 'Common → Rare',
+    tint: 'from-[#1a1630]/80 via-[#2f4a9b]/40 to-[#5b7fd4]/30',
+    glow: 'rgba(91,127,212,0.35)',
+    preview: '/assets/12.png',
   },
   {
     key: 'feet',
     name: 'Feet',
-    count: 10,
-    line: 'Even celestial beings need somewhere to stand.',
-    detail: 'Boots kept inside the Luxora visual language so every combination still feels native.',
+    order: 2,
+    rarity: 'Common → Epic',
+    tint: 'from-[#f7f1e6]/70 via-[#e8c56a]/25 to-[#c9a24a]/20',
+    glow: 'rgba(201,162,74,0.3)',
+    preview: '/assets/8.png',
+  },
+  {
+    key: 'body',
+    name: 'Body',
+    order: 3,
+    rarity: 'Common → Legendary',
+    tint: 'from-[#f0d4df]/60 via-[#e8e4f2]/40 to-[#d4e4f0]/35',
+    glow: 'rgba(240,212,223,0.4)',
+    preview: '/assets/1.png',
+  },
+  {
+    key: 'left-charm',
+    name: 'Left Charm',
+    order: 4,
+    rarity: 'Uncommon → Legendary',
+    tint: 'from-[#e8c56a]/35 via-[#f7f1e6]/50 to-[#c9a24a]/25',
+    glow: 'rgba(232,197,106,0.35)',
+    preview: '/assets/22.png',
+  },
+  {
+    key: 'right-charm',
+    name: 'Right Charm',
+    order: 5,
+    rarity: 'Uncommon → Legendary',
+    tint: 'from-[#5b7fd4]/30 via-[#d4e4f0]/45 to-[#f0d4df]/35',
+    glow: 'rgba(91,127,212,0.3)',
+    preview: '/assets/30.png',
+  },
+  {
+    key: 'eye',
+    name: 'Eye',
+    order: 6,
+    rarity: 'Rare → Legendary',
+    tint: 'from-[#c9a24a]/40 via-[#f7f1e6]/55 to-[#8b5a14]/20',
+    glow: 'rgba(201,162,74,0.45)',
+    preview: '/assets/15.png',
+  },
+  {
+    key: 'cloud',
+    name: 'Cloud',
+    order: 7,
+    rarity: 'Common → Mythic',
+    tint: 'from-[#ffffff]/70 via-[#f0d4df]/40 to-[#d4e4f0]/50',
+    glow: 'rgba(255,255,255,0.5)',
+    preview: '/assets/37.png',
   },
 ]
+
+export const collectionCopy = {
+  eyebrow: 'The Collection',
+  headline: '120 traits. 7 layers. 320 million possible combinations.',
+  body: 'Every LUXORA is assembled from seven layers — background, feet, body, left charm, right charm, eye, and cloud. Each layer holds multiple variants spanning common to legendary rarity.',
+  rarityLine:
+    'Finding a Phoenix cloud is rare. Finding a Crown cloud is rarer. Finding both on the same lantern? That\'s yours forever.',
+}
 
 export const lightPillars = [
   {

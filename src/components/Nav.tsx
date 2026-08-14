@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 
 const links = [
   { label: 'World', href: '#world' },
-  { label: 'Traits', href: '#traits' },
+  { label: 'Collection', href: '#traits' },
   { label: 'Gallery', href: '#gallery' },
   { label: 'The Light', href: '#light' },
   { label: 'Roadmap', href: '#roadmap' },

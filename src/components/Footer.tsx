@@ -13,7 +13,7 @@ export function Footer() {
             World
           </a>
           <a href="#traits" className="transition hover:text-ink">
-            Traits
+            Collection
           </a>
           <a href="#light" className="transition hover:text-ink">
             The Light
