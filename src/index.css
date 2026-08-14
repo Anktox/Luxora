@@ -115,15 +115,14 @@
       linear-gradient(180deg, #0c0a14 0%, #151228 28%, #1a1630 52%, #2a2218 78%, #1a1630 100%);
   }
 
-  /* Tall phones & narrow viewports: show the full hero art */
+  /* Hero — portrait asset on mobile, landscape webp on desktop */
   .hero-img {
-    object-fit: contain;
+    object-fit: cover;
     object-position: center center;
   }
 
   @media (min-width: 768px) {
     .hero-img {
-      object-fit: cover;
       object-position: center 42%;
     }
   }

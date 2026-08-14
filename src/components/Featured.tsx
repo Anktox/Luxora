@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, type PanInfo } from 'framer-motion'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { heroPieces } from '../data/nfts'
 import type { Nft } from '../data/nfts'
 
@@ -7,11 +7,12 @@ type Props = {
   onSelect: (nft: Nft) => void
 }
 
-/** Back cards peek from behind the top — image only, no text */
 const PEEK_OFFSETS = [
   { rotate: -3.5, y: -10, x: -12, scale: 0.94 },
   { rotate: 4, y: -20, x: 14, scale: 0.88 },
 ]
+
+const SWIPE_THRESHOLD = 60
 
 function shuffle<T>(items: T[]) {
   const next = [...items]
@@ -44,7 +45,7 @@ export function Featured({ onSelect }: Props) {
         <FeaturedStack deck={deck} onSelect={onSelect} />
 
         <p className="mt-6 text-center text-[11px] uppercase tracking-[0.22em] text-ink-soft">
-          Swipe or drag to reveal the next
+          Swipe or drag to reveal the next · Tap to open
         </p>
       </div>
     </section>
@@ -54,6 +55,7 @@ export function Featured({ onSelect }: Props) {
 function FeaturedStack({ deck, onSelect }: { deck: Nft[]; onSelect: (nft: Nft) => void }) {
   const [cursor, setCursor] = useState(0)
   const [exitX, setExitX] = useState(0)
+  const dragged = useRef(false)
 
   const top = deck[cursor % deck.length]
   const mid = deck[(cursor + 1) % deck.length]
@@ -61,13 +63,30 @@ function FeaturedStack({ deck, onSelect }: { deck: Nft[]; onSelect: (nft: Nft) =
   const peekCards = [bot, mid]
 
   const dismiss = (direction: 1 | -1) => {
+    dragged.current = true
     setExitX(direction * 360)
     setCursor((c) => (c + 1) % deck.length)
   }
 
+  const onDragStart = () => {
+    dragged.current = false
+  }
+
+  const onDrag = (_: unknown, info: PanInfo) => {
+    if (Math.abs(info.offset.x) > 8) dragged.current = true
+  }
+
   const onDragEnd = (_: unknown, info: PanInfo) => {
-    if (info.offset.x > 80) dismiss(-1)
-    else if (info.offset.x < -80) dismiss(1)
+    if (info.offset.x > SWIPE_THRESHOLD) dismiss(-1)
+    else if (info.offset.x < -SWIPE_THRESHOLD) dismiss(1)
+
+    window.setTimeout(() => {
+      dragged.current = false
+    }, 120)
+  }
+
+  const onTap = () => {
+    if (!dragged.current) onSelect(top)
   }
 
   return (
@@ -97,19 +116,23 @@ function FeaturedStack({ deck, onSelect }: { deck: Nft[]; onSelect: (nft: Nft) =
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.div
             key={`${top.id}-${cursor}`}
-            className="absolute inset-x-0 top-6 origin-top"
-            style={{ zIndex: 10 }}
+            className="absolute inset-x-0 top-6 origin-top cursor-grab active:cursor-grabbing"
+            style={{ zIndex: 10, touchAction: 'pan-y' }}
             initial={{ x: exitX, opacity: 0, rotate: 0, scale: 0.98 }}
             animate={{ x: 0, y: 0, rotate: 0, scale: 1, opacity: 1 }}
             exit={{ x: exitX, opacity: 0, rotate: exitX * 0.05, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 280, damping: 28 }}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.85}
+            dragElastic={0.75}
+            dragMomentum={false}
+            onDragStart={onDragStart}
+            onDrag={onDrag}
             onDragEnd={onDragEnd}
-            whileDrag={{ scale: 1.02, cursor: 'grabbing' }}
+            onTap={onTap}
+            whileDrag={{ scale: 1.02 }}
           >
-            <FeaturedCard nft={top} onSelect={onSelect} />
+            <FeaturedCard nft={top} />
           </motion.div>
         </AnimatePresence>
       </div>
@@ -128,7 +151,6 @@ function FeaturedStack({ deck, onSelect }: { deck: Nft[]; onSelect: (nft: Nft) =
   )
 }
 
-/** Image-only card for stack peek — no metadata overlap */
 function PeekCard({ nft }: { nft: Nft }) {
   return (
     <div
@@ -148,13 +170,9 @@ function PeekCard({ nft }: { nft: Nft }) {
   )
 }
 
-function FeaturedCard({ nft, onSelect }: { nft: Nft; onSelect: (nft: Nft) => void }) {
+function FeaturedCard({ nft }: { nft: Nft }) {
   return (
-    <motion.button
-      type="button"
-      onClick={() => onSelect(nft)}
-      className="group relative w-full cursor-grab text-left active:cursor-grabbing"
-    >
+    <div className="group relative w-full select-none">
       <div className="glass overflow-hidden rounded-[clamp(1rem,3vw,1.6rem)] p-[clamp(0.5rem,2vw,0.85rem)] shadow-[0_20px_50px_rgba(26,22,48,0.12)] md:p-4">
         <div className="overflow-hidden rounded-[clamp(0.75rem,2vw,1.15rem)] bg-gradient-to-br from-cream/40 to-sky/30">
           <img
@@ -179,6 +197,6 @@ function FeaturedCard({ nft, onSelect }: { nft: Nft; onSelect: (nft: Nft) => voi
           </span>
         </div>
       </div>
-    </motion.button>
+    </div>
   )
 }

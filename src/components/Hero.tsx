@@ -20,50 +20,39 @@ export function Hero() {
 
   return (
     <section id="top" className="relative flex min-h-[100svh] items-end overflow-hidden">
-      {/* Matches hero edges when image is letterboxed on tall screens */}
-      <div
-        aria-hidden
-        className="hero-backdrop absolute inset-0"
-      />
+      <div aria-hidden className="hero-backdrop absolute inset-0" />
 
       <motion.div
         style={{
           y: allowMotion ? imageY : 0,
           scale: allowMotion ? imageScale : 1,
         }}
-        className="absolute inset-0 flex items-center justify-center"
+        className="absolute inset-0"
       >
-        <picture className="flex h-full w-full items-center justify-center">
-          <source
-            media="(max-width: 640px)"
-            srcSet="/assets/hero-800.webp"
-            type="image/webp"
-          />
-          <source
-            media="(max-width: 1280px)"
-            srcSet="/assets/hero-1600.webp"
-            type="image/webp"
-          />
+        <picture className="block h-full w-full">
+          {/* Portrait hero for phones */}
+          <source media="(max-width: 767px)" srcSet="/assets/vitical.png" />
+          <source media="(max-width: 1280px)" srcSet="/assets/hero-1600.webp" type="image/webp" />
           <img
             src="/assets/hero-3200.webp"
             srcSet="/assets/hero-800.webp 800w, /assets/hero-1600.webp 1600w, /assets/hero-3200.webp 3200w"
             sizes="100vw"
             alt="Luxora — Born from clouds. Carrying light."
-            className="hero-img h-full w-full max-h-[100svh] object-contain object-center md:object-cover md:object-[center_42%]"
+            className="hero-img h-full w-full"
             fetchPriority="high"
             decoding="async"
           />
         </picture>
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[28%] bg-gradient-to-t from-[#1a1630]/50 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[32%] bg-gradient-to-t from-[#1a1630]/55 to-transparent md:h-[28%] md:from-[#1a1630]/50" />
       </motion.div>
 
       <h1 className="sr-only">Luxora — Born from clouds. Carrying light.</h1>
 
       <motion.div
         style={{ opacity: fade, y: ctaY }}
-        className="relative z-10 w-full px-5 pb-12 pt-28 md:px-10 md:pb-16"
+        className="relative z-10 w-full px-5 pb-10 pt-28 md:px-10 md:pb-16"
       >
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 sm:flex-row sm:justify-center">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
           <motion.a
             href="#gallery"
             initial={{ opacity: 0, y: 18 }}
