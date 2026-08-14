@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+
+  --color-ink: #1a1630;
+  --color-ink-soft: #3d3558;
+  --color-mist: #e8e4f2;
+  --color-sky: #d4e4f0;
+  --color-cream: #f7f1e6;
+  --color-gold: #c9a24a;
+  --color-gold-bright: #e8c56a;
+  --color-royal: #2f4a9b;
+  --color-royal-soft: #5b7fd4;
+  --color-blush: #f0d4df;
+  --color-glass: rgba(255, 255, 255, 0.28);
+  --color-glass-strong: rgba(255, 255, 255, 0.42);
+  --color-stroke: rgba(255, 255, 255, 0.55);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+    background:
+      radial-gradient(1200px 700px at 15% -10%, rgba(240, 212, 223, 0.55), transparent 55%),
+      radial-gradient(900px 600px at 90% 5%, rgba(91, 127, 212, 0.28), transparent 50%),
+      radial-gradient(800px 500px at 50% 100%, rgba(201, 162, 74, 0.18), transparent 55%),
+      linear-gradient(165deg, #efeaf8 0%, #e4eef7 42%, #f4ebe3 100%);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: rgba(201, 162, 74, 0.35);
+    color: var(--color-ink);
+  }
+
+  img {
+    max-width: 100%;
+    display: block;
+  }
+
+  button {
+    font: inherit;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .glass {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.42),
+      rgba(255, 255, 255, 0.14)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow:
+      0 10px 40px rgba(40, 30, 70, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(22px) saturate(1.35);
+    -webkit-backdrop-filter: blur(22px) saturate(1.35);
+  }
+
+  .glass-strong {
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.55),
+      rgba(255, 255, 255, 0.18)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.62);
+    box-shadow:
+      0 18px 50px rgba(40, 30, 70, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(28px) saturate(1.4);
+    -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  }
+
+  .text-gold {
+    background: linear-gradient(120deg, #8d6b22, #e8c56a 45%, #a67c2d);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
