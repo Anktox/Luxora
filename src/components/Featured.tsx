@@ -1,5 +1,5 @@
-import { AnimatePresence, motion, useScroll, useTransform, type PanInfo } from 'framer-motion'
-import { useRef, useState } from 'react'
+import { AnimatePresence, motion, type PanInfo } from 'framer-motion'
+import { useState } from 'react'
 import { heroPieces } from '../data/nfts'
 import type { Nft } from '../data/nfts'
 
@@ -13,6 +13,12 @@ const STACK_OFFSETS = [
   { rotate: 4.5, y: 32, x: 12, scale: 0.92 },
 ]
 
+const DESKTOP_STACK_OFFSETS = [
+  { rotate: 0, y: 0, x: 0, scale: 1 },
+  { rotate: -4, y: 20, x: -14, scale: 0.965 },
+  { rotate: 3.5, y: 40, x: 16, scale: 0.93 },
+]
+
 function shuffle<T>(items: T[]) {
   const next = [...items]
   for (let i = next.length - 1; i > 0; i--) {
@@ -23,20 +29,12 @@ function shuffle<T>(items: T[]) {
 }
 
 export function Featured({ onSelect }: Props) {
-  const ref = useRef<HTMLElement>(null)
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start end', 'end start'],
-  })
-  const rotateY = useTransform(scrollYProgress, [0.15, 0.85], [-12, 12])
-  const depth = useTransform(scrollYProgress, [0.1, 0.5, 0.9], [40, 0, -40])
-
   const [deck] = useState(() => shuffle(heroPieces))
 
   return (
-    <section id="featured" ref={ref} className="relative px-5 py-24 md:px-10 md:py-32">
+    <section id="featured" className="relative px-5 py-24 md:px-10 md:py-32">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-8 max-w-2xl md:mb-16">
+        <div className="mb-8 max-w-2xl md:mb-12">
           <p className="text-xs font-medium uppercase tracking-[0.3em] text-royal-soft">
             First Glimpses
           </p>
@@ -49,26 +47,11 @@ export function Featured({ onSelect }: Props) {
           </p>
         </div>
 
-        <div className="md:hidden">
-          <FeaturedStack deck={deck} onSelect={onSelect} />
-          <p className="mt-4 text-center text-[11px] uppercase tracking-[0.22em] text-ink-soft">
-            Swipe to reveal the next
-          </p>
-        </div>
+        <FeaturedStack deck={deck} onSelect={onSelect} />
 
-        <div
-          className="relative hidden md:block"
-          style={{ perspective: '1400px', perspectiveOrigin: '50% 45%' }}
-        >
-          <motion.div
-            style={{ rotateY, y: depth, transformStyle: 'preserve-3d' }}
-            className="grid gap-6 md:grid-cols-3"
-          >
-            {heroPieces.map((nft, index) => (
-              <FeaturedCard key={nft.id} nft={nft} index={index} onSelect={onSelect} />
-            ))}
-          </motion.div>
-        </div>
+        <p className="mt-5 text-center text-[11px] uppercase tracking-[0.22em] text-ink-soft">
+          Swipe or drag to reveal the next
+        </p>
       </div>
     </section>
   )
@@ -83,7 +66,7 @@ function FeaturedStack({ deck, onSelect }: { deck: Nft[]; onSelect: (nft: Nft) =
   const bot = deck[(cursor + 2) % deck.length]
 
   const dismiss = (direction: 1 | -1) => {
-    setExitX(direction * 320)
+    setExitX(direction * 360)
     setCursor((c) => (c + 1) % deck.length)
   }
 
@@ -93,27 +76,10 @@ function FeaturedStack({ deck, onSelect }: { deck: Nft[]; onSelect: (nft: Nft) =
   }
 
   return (
-    <div className="relative mx-auto h-[min(72vw+88px,420px)] w-full max-w-[340px] touch-pan-y">
-      {[bot, mid].map((nft, i) => {
-        const stackIndex = i + 1
-        const offset = STACK_OFFSETS[stackIndex]
-        return (
-          <motion.div
-            key={`${nft.id}-back-${stackIndex}`}
-            className="pointer-events-none absolute inset-x-0 top-0 origin-top"
-            style={{ zIndex: stackIndex }}
-            animate={{
-              x: offset.x,
-              y: offset.y,
-              rotate: offset.rotate,
-              scale: offset.scale,
-            }}
-            transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-          >
-            <FeaturedCard nft={nft} stackMode onSelect={onSelect} />
-          </motion.div>
-        )
-      })}
+    <div className="relative mx-auto h-[min(72vw+88px,420px)] w-full max-w-[340px] touch-pan-y md:h-[480px] md:max-w-[400px] lg:max-w-[440px]">
+      {[bot, mid].map((nft, i) => (
+        <BackCard key={`${nft.id}-back-${i}`} nft={nft} stackIndex={i + 1} onSelect={onSelect} />
+      ))}
 
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.div
@@ -130,49 +96,71 @@ function FeaturedStack({ deck, onSelect }: { deck: Nft[]; onSelect: (nft: Nft) =
           onDragEnd={onDragEnd}
           whileDrag={{ scale: 1.02, cursor: 'grabbing' }}
         >
-          <FeaturedCard nft={top} stackMode onSelect={onSelect} />
+          <FeaturedCard nft={top} onSelect={onSelect} />
         </motion.div>
       </AnimatePresence>
+
+      <div className="pointer-events-none absolute -bottom-2 left-1/2 flex -translate-x-1/2 gap-2">
+        {deck.map((nft, i) => (
+          <span
+            key={nft.id}
+            className={`h-1.5 rounded-full transition-all duration-300 ${
+              i === cursor % deck.length ? 'w-5 bg-gold' : 'w-1.5 bg-ink/20'
+            }`}
+          />
+        ))}
+      </div>
     </div>
   )
 }
 
-function FeaturedCard({
+function BackCard({
   nft,
-  index,
-  stackMode,
+  stackIndex,
   onSelect,
 }: {
   nft: Nft
-  index?: number
-  stackMode?: boolean
+  stackIndex: number
   onSelect: (nft: Nft) => void
 }) {
-  const z = index === 1 ? 60 : index === 0 ? 20 : 10
-  const tilt = index === 0 ? -8 : index === 2 ? 8 : 0
+  return (
+    <>
+      <motion.div
+        className="pointer-events-none absolute inset-x-0 top-0 origin-top md:hidden"
+        style={{ zIndex: stackIndex }}
+        animate={{
+          x: STACK_OFFSETS[stackIndex].x,
+          y: STACK_OFFSETS[stackIndex].y,
+          rotate: STACK_OFFSETS[stackIndex].rotate,
+          scale: STACK_OFFSETS[stackIndex].scale,
+        }}
+        transition={{ type: 'spring', stiffness: 280, damping: 28 }}
+      >
+        <FeaturedCard nft={nft} onSelect={onSelect} />
+      </motion.div>
+      <motion.div
+        className="pointer-events-none absolute inset-x-0 top-0 hidden origin-top md:block"
+        style={{ zIndex: stackIndex }}
+        animate={{
+          x: DESKTOP_STACK_OFFSETS[stackIndex].x,
+          y: DESKTOP_STACK_OFFSETS[stackIndex].y,
+          rotate: DESKTOP_STACK_OFFSETS[stackIndex].rotate,
+          scale: DESKTOP_STACK_OFFSETS[stackIndex].scale,
+        }}
+        transition={{ type: 'spring', stiffness: 280, damping: 28 }}
+      >
+        <FeaturedCard nft={nft} onSelect={onSelect} />
+      </motion.div>
+    </>
+  )
+}
 
+function FeaturedCard({ nft, onSelect }: { nft: Nft; onSelect: (nft: Nft) => void }) {
   return (
     <motion.button
       type="button"
       onClick={() => onSelect(nft)}
-      initial={stackMode ? false : { opacity: 0, y: 40 }}
-      whileInView={stackMode ? undefined : { opacity: 1, y: 0 }}
-      viewport={stackMode ? undefined : { once: true, amount: 0.35 }}
-      transition={
-        stackMode
-          ? undefined
-          : { delay: (index ?? 0) * 0.12, duration: 0.8, ease: [0.22, 1, 0.36, 1] }
-      }
-      whileHover={stackMode ? undefined : { y: -10, scale: 1.02 }}
-      className={`group relative w-full text-left ${stackMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
-      style={
-        stackMode
-          ? undefined
-          : {
-              transform: `translateZ(${z}px) rotateY(${tilt}deg)`,
-              transformStyle: 'preserve-3d',
-            }
-      }
+      className="group relative w-full cursor-grab text-left active:cursor-grabbing"
     >
       <div className="glass overflow-hidden rounded-[1.6rem] p-3 shadow-[0_20px_50px_rgba(26,22,48,0.12)] md:p-4">
         <div className="overflow-hidden rounded-[1.15rem] bg-gradient-to-br from-cream/40 to-sky/30">
