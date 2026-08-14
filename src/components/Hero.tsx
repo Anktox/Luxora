@@ -11,9 +11,11 @@ export function Hero() {
     <section id="top" className="relative flex min-h-[100svh] items-end overflow-hidden">
       <motion.div style={{ y: imageY, scale: imageScale }} className="absolute inset-0">
         <img
-          src="/assets/hero.webp"
+          src="/assets/hero-1600.webp"
+          srcSet="/assets/hero-800.webp 800w, /assets/hero-1600.webp 1600w, /assets/hero-3200.webp 3200w"
+          sizes="100vw"
           alt="Luxora — Born from clouds. Carrying light."
-          className="hero-img h-full w-full object-cover md:object-[center_42%]"
+          className="h-full w-full object-cover md:object-[center_42%]"
           fetchPriority="high"
         />
         <div className="absolute inset-x-0 bottom-0 h-[28%] bg-gradient-to-t from-[#1a1630]/50 to-transparent" />

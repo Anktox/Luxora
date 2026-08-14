@@ -83,16 +83,15 @@ const vibes = [
   'Gilded',
 ]
 
-export const nfts: Nft[] = Array.from({ length: 63 }, (_, i) => {
-  const id = i + 1
-  return {
-    id,
-    src: `/assets/${id}.webp`,
-    title: titles[i] ?? `Luxora #${id}`,
-    edition: `#${String(id).padStart(3, '0')} / 063`,
-    vibe: vibes[i % vibes.length],
-  }
-})
+const revealedIds = [6, 8, 14, 20, 23, 37, 38, 39, 41, 43, 58]
+
+export const nfts: Nft[] = revealedIds.map((id) => ({
+  id,
+  src: `/assets/${id}.webp`,
+  title: titles[id - 1],
+  edition: `#${String(id).padStart(3, '0')} / ${String(revealedIds.length).padStart(3, '0')}`,
+  vibe: vibes[id % vibes.length],
+}))
 
 export const featured = nfts[0]
-export const heroPieces = [nfts[14], nfts[0], nfts[29]]
+export const heroPieces = [nfts[4], nfts[0], nfts[10]]

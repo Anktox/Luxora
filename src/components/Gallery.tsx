@@ -34,7 +34,7 @@ export function Gallery({ onSelect }: Props) {
           </div>
           <div className="glass hidden min-w-[160px] rounded-2xl px-4 py-3 md:block">
             <p className="text-[11px] uppercase tracking-[0.24em] text-ink-soft">Preview</p>
-            <p className="font-display mt-1 text-3xl text-ink">63</p>
+            <p className="font-display mt-1 text-3xl text-ink">{nfts.length}</p>
             <p className="mt-0.5 text-[10px] tracking-wider text-ink-soft">of 10,000</p>
           </div>
         </div>
@@ -90,7 +90,7 @@ function GalleryPiece({
   const baseRot = rotMap[pattern]
 
   const local = useTransform(progress, (v) => {
-    const center = index / 63
+    const center = index / nfts.length
     return (v - center) * 18
   })
   const rotateY = useTransform(local, (v) => baseRot + v)
