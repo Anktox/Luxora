@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react'
 import { AmbientBackground } from './components/AmbientBackground'
 import { CloudField } from './components/CloudField'
-import { CollectionGrid } from './components/CollectionGrid'
 import { Featured } from './components/Featured'
 import { Footer } from './components/Footer'
 import { Gallery } from './components/Gallery'
@@ -50,7 +49,6 @@ export default function App() {
         <Featured onSelect={onSelect} />
         <Traits />
         <Gallery onSelect={onSelect} />
-        <CollectionGrid onSelect={onSelect} />
         <TheLight />
         <Roadmap />
         <LookCloser />
