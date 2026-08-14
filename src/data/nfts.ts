@@ -87,7 +87,7 @@ export const nfts: Nft[] = Array.from({ length: 63 }, (_, i) => {
   const id = i + 1
   return {
     id,
-    src: `/assets/${id}.png`,
+    src: `/assets/${id}.webp`,
     title: titles[i] ?? `Luxora #${id}`,
     edition: `#${String(id).padStart(3, '0')} / 063`,
     vibe: vibes[i % vibes.length],

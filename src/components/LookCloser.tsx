@@ -5,7 +5,7 @@ export function LookCloser() {
     <section id="closer" className="relative px-5 py-24 md:px-10 md:py-32">
       <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem]">
         <img
-          src="/assets/hero.png"
+          src="/assets/hero.webp"
           alt=""
           className="absolute inset-0 h-full w-full object-cover object-center opacity-90"
           loading="lazy"
