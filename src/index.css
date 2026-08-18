@@ -27,13 +27,8 @@
     min-height: 100%;
   }
 
-  html.lenis,
-  html.lenis body {
-    height: auto;
-  }
-
-  .lenis.lenis-smooth {
-    scroll-behavior: auto !important;
+  html {
+    overflow-x: clip;
   }
 
   body {
@@ -42,7 +37,7 @@
     color: var(--color-ink);
     background: linear-gradient(165deg, #efeaf8 0%, #e4eef7 42%, #f4ebe3 100%);
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   ::selection {
@@ -178,6 +173,55 @@
   .featured-peek {
     max-height: clamp(260px, 88vw, 440px);
   }
+
+  .gallery-pin {
+    view-timeline-name: --gallery-pin;
+    view-timeline-axis: block;
+  }
+
+  .gallery-track {
+    transform: translate3d(6%, 0, 0);
+    backface-visibility: hidden;
+    animation: gallery-pan linear both;
+    animation-timeline: --gallery-pin;
+    animation-range: contain 0% contain 100%;
+  }
+
+  .gallery-bar {
+    transform: scaleX(0);
+    animation: gallery-bar linear both;
+    animation-timeline: --gallery-pin;
+    animation-range: contain 0% contain 100%;
+  }
+
+  .gallery-card {
+    contain: layout paint;
+  }
+
+  @keyframes gallery-pan {
+    from {
+      transform: translate3d(6%, 0, 0);
+    }
+    to {
+      transform: translate3d(-72%, 0, 0);
+    }
+  }
+
+  @keyframes gallery-bar {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  @supports not (animation-timeline: view()) {
+    .gallery-track,
+    .gallery-bar {
+      animation: none;
+    }
+  }
 }
 
 @media (min-width: 2400px) {
@@ -187,6 +231,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .gallery-track,
+  .gallery-bar {
+    animation: none !important;
+  }
+
   *,
   *::before,
   *::after {
@@ -194,5 +243,10 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .gallery-track,
+  .gallery-bar {
+    animation: none !important;
   }
 }

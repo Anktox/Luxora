@@ -1,27 +1,65 @@
-import { motion, useScroll, useTransform } from 'framer-motion'
 import { nfts, type Nft } from '../data/nfts'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 
 type Props = {
   onSelect: (nft: Nft) => void
 }
 
-const depthMap = [0, 8, -6, 5, -4]
-const yMap = [0, -18, 14, -10, 20]
-const rotMap = [-3, 2, -1.5, 3, -2.5]
+const yMap = [0, -14, 12, -8, 16]
 
 export function Gallery({ onSelect }: Props) {
   const sectionRef = useRef<HTMLElement>(null)
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start start', 'end end'],
-  })
+  const trackRef = useRef<HTMLDivElement>(null)
+  const barRef = useRef<HTMLDivElement>(null)
 
-  const x = useTransform(scrollYProgress, [0, 1], ['6%', '-72%'])
-  const progressWidth = useTransform(scrollYProgress, [0, 1], ['0%', '100%'])
+  useEffect(() => {
+    const section = sectionRef.current
+    const track = trackRef.current
+    const bar = barRef.current
+    if (!section || !track || !bar) return
+
+    const supportsTimeline =
+      typeof CSS !== 'undefined' &&
+      'supports' in CSS &&
+      (CSS.supports('animation-timeline: view()') ||
+        CSS.supports('animation-timeline', 'view()'))
+
+    if (supportsTimeline) return
+
+    let start = 0
+    let range = 1
+    let ticking = false
+
+    const measure = () => {
+      start = section.offsetTop
+      range = Math.max(1, section.offsetHeight - window.innerHeight)
+    }
+
+    const paint = () => {
+      ticking = false
+      const p = Math.min(1, Math.max(0, (window.scrollY - start) / range))
+      track.style.transform = `translate3d(${6 - p * 78}%, 0, 0)`
+      bar.style.transform = `scaleX(${p})`
+    }
+
+    const onScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(paint)
+    }
+
+    measure()
+    paint()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', measure, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', measure)
+    }
+  }, [])
 
   return (
-    <section id="gallery" ref={sectionRef} className="relative h-[280vh]">
+    <section id="gallery" ref={sectionRef} className="gallery-pin relative h-[240vh]">
       <div className="sticky top-0 flex h-[100svh] flex-col overflow-hidden">
         <div className="relative z-10 mx-auto flex w-full max-w-6xl items-end justify-between gap-6 px-5 pb-4 pt-28 md:px-10">
           <div>
@@ -33,7 +71,7 @@ export function Gallery({ onSelect }: Props) {
               A drift through early Luxora sightings. Tap any being to look closer.
             </p>
           </div>
-          <div className="glass hidden min-w-[160px] rounded-2xl px-4 py-3 md:block">
+          <div className="glass-lite hidden min-w-[160px] rounded-2xl px-4 py-3 md:block">
             <p className="text-[11px] uppercase tracking-[0.24em] text-ink-soft">Preview</p>
             <p className="font-display mt-1 text-3xl text-ink">{nfts.length}</p>
             <p className="mt-0.5 text-[10px] tracking-wider text-ink-soft">of 10,000</p>
@@ -41,19 +79,16 @@ export function Gallery({ onSelect }: Props) {
         </div>
 
         <div className="relative flex flex-1 items-center overflow-hidden">
-          <motion.div
-            style={{ x }}
-            className="flex w-max items-center gap-5 px-8 will-change-transform md:gap-8 md:px-16"
-          >
+          <div ref={trackRef} className="gallery-track flex w-max items-center gap-5 px-8 md:gap-8 md:px-16">
             {nfts.map((nft, index) => (
               <GalleryPiece key={nft.id} nft={nft} index={index} onSelect={onSelect} />
             ))}
-          </motion.div>
+          </div>
         </div>
 
         <div className="mx-auto mb-8 w-full max-w-6xl px-5 md:px-10">
           <div className="h-[2px] overflow-hidden rounded-full bg-ink/10">
-            <motion.div style={{ width: progressWidth }} className="h-full bg-gold" />
+            <div ref={barRef} className="gallery-bar h-full origin-left bg-gold" />
           </div>
         </div>
       </div>
@@ -70,18 +105,14 @@ function GalleryPiece({
   index: number
   onSelect: (nft: Nft) => void
 }) {
-  const pattern = index % 5
-
   return (
     <button
       type="button"
       onClick={() => onSelect(nft)}
-      className="group relative w-[68vw] max-w-[300px] shrink-0 text-left sm:w-[42vw] md:w-[280px]"
-      style={{
-        transform: `translateY(${yMap[pattern]}px) rotate(${rotMap[pattern]}deg) translateZ(${depthMap[pattern]}px)`,
-      }}
+      className="gallery-card relative w-[64vw] max-w-[280px] shrink-0 text-left sm:w-[40vw] md:w-[260px]"
+      style={{ transform: `translate3d(0, ${yMap[index % 5]}px, 0)` }}
     >
-      <div className="glass-lite overflow-hidden rounded-[1.5rem] p-2.5 shadow-[0_12px_32px_rgba(26,22,48,0.08)]">
+      <div className="glass-lite overflow-hidden rounded-[1.5rem] p-2.5">
         <div className="overflow-hidden rounded-[1.1rem] bg-cream/40">
           <img
             src={nft.thumb}

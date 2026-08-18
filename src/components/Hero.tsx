@@ -18,11 +18,11 @@ export function Hero() {
             type="image/webp"
           />
           <img
-            src="/assets/hero-1600.webp"
+            src="/assets/vitical-720.webp"
             alt="Luxora — Born from clouds. Carrying light."
             className="hero-img h-full w-full"
-            width={1600}
-            height={900}
+            width={720}
+            height={1280}
             fetchPriority="high"
             decoding="async"
           />

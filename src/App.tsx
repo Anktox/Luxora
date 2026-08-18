@@ -1,20 +1,25 @@
-import { useCallback, useState } from 'react'
+import { lazy, Suspense, useCallback, useState } from 'react'
 import { AmbientBackground } from './components/AmbientBackground'
-import { CloudField } from './components/CloudField'
-import { Featured } from './components/Featured'
 import { Footer } from './components/Footer'
 import { Gallery } from './components/Gallery'
 import { Hero } from './components/Hero'
-import { Lightbox } from './components/Lightbox'
 import { LookCloser } from './components/LookCloser'
 import { Nav } from './components/Nav'
 import { Roadmap } from './components/Roadmap'
-import { SmoothScroll } from './components/SmoothScroll'
 import { TheLight } from './components/TheLight'
 import { Traits } from './components/Traits'
-import { WatchingEye } from './components/WatchingEye'
 import { World } from './components/World'
 import { nfts, type Nft } from './data/nfts'
+
+const Featured = lazy(() =>
+  import('./components/Featured').then((m) => ({ default: m.Featured })),
+)
+const Lightbox = lazy(() =>
+  import('./components/Lightbox').then((m) => ({ default: m.Lightbox })),
+)
+const WatchingEye = lazy(() =>
+  import('./components/WatchingEye').then((m) => ({ default: m.WatchingEye })),
+)
 
 export default function App() {
   const [active, setActive] = useState<Nft | null>(null)
@@ -39,14 +44,15 @@ export default function App() {
   }, [])
 
   return (
-    <SmoothScroll>
+    <>
       <AmbientBackground />
-      <CloudField />
       <Nav />
       <main>
         <Hero />
         <World />
-        <Featured onSelect={onSelect} />
+        <Suspense fallback={<div className="h-[70vh]" />}>
+          <Featured onSelect={onSelect} />
+        </Suspense>
         <Traits />
         <Gallery onSelect={onSelect} />
         <TheLight />
@@ -54,8 +60,10 @@ export default function App() {
         <LookCloser />
       </main>
       <Footer />
-      <WatchingEye />
-      <Lightbox nft={active} onClose={onClose} onPrev={onPrev} onNext={onNext} />
-    </SmoothScroll>
+      <Suspense fallback={null}>
+        <WatchingEye />
+        <Lightbox nft={active} onClose={onClose} onPrev={onPrev} onNext={onNext} />
+      </Suspense>
+    </>
   )
 }
