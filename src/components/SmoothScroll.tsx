@@ -3,11 +3,14 @@ import Lenis from 'lenis'
 
 export function SmoothScroll({ children }: { children: ReactNode }) {
   useEffect(() => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const coarse = window.matchMedia('(pointer: coarse)').matches
+    if (reduce || coarse) return
+
     const lenis = new Lenis({
-      duration: 1.25,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      duration: 1.05,
       smoothWheel: true,
-      touchMultiplier: 1.35,
+      touchMultiplier: 1,
     })
 
     let frame = 0

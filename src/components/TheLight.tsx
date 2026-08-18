@@ -3,7 +3,7 @@ import { lightPillars, philosophy } from '../data/lore'
 
 export function TheLight() {
   return (
-    <section id="light" className="relative px-5 py-24 md:px-10 md:py-32">
+    <section id="light" className="content-auto relative px-5 py-24 md:px-10 md:py-32">
       <div className="mx-auto max-w-6xl">
         <div className="mb-12 max-w-2xl md:mb-16">
           <p className="text-xs font-medium uppercase tracking-[0.3em] text-royal-soft">The Light</p>
@@ -24,9 +24,9 @@ export function TheLight() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.55 }}
-              className="glass-strong relative overflow-hidden rounded-[1.6rem] p-6 md:p-7"
+              className="glass-lite relative overflow-hidden rounded-[1.6rem] p-6 md:p-7"
             >
-              <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-gold/20 blur-2xl" />
+              <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-gold/15" />
               <span className="inline-flex rounded-full border border-gold/35 bg-gold/10 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.22em] text-gold">
                 {pillar.status}
               </span>
@@ -44,7 +44,7 @@ export function TheLight() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08, duration: 0.5 }}
-              className="rounded-[1.4rem] border border-white/40 bg-white/20 px-5 py-6 backdrop-blur-md"
+              className="rounded-[1.4rem] border border-white/50 bg-white/70 px-5 py-6"
             >
               <p className="text-xs tracking-[0.28em] text-gold">{item.num}</p>
               <h4 className="font-display mt-2 text-2xl text-ink">{item.name}</h4>

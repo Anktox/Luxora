@@ -155,13 +155,16 @@ function PeekCard({ nft }: { nft: Nft }) {
   return (
     <div
       aria-hidden
-      className="featured-peek glass overflow-hidden rounded-[clamp(1rem,3vw,1.6rem)] p-[clamp(0.5rem,2vw,0.85rem)] shadow-[0_16px_40px_rgba(26,22,48,0.1)]"
+      className="featured-peek glass-lite overflow-hidden rounded-[clamp(1rem,3vw,1.6rem)] p-[clamp(0.5rem,2vw,0.85rem)] shadow-[0_16px_40px_rgba(26,22,48,0.1)]"
     >
       <div className="overflow-hidden rounded-[clamp(0.75rem,2vw,1.15rem)] bg-gradient-to-br from-cream/40 to-sky/30">
         <img
-          src={nft.src}
+          src={nft.thumb}
           alt=""
+          width={640}
+          height={640}
           loading="lazy"
+          decoding="async"
           draggable={false}
           className="aspect-square w-full object-cover"
         />
@@ -173,14 +176,17 @@ function PeekCard({ nft }: { nft: Nft }) {
 function FeaturedCard({ nft }: { nft: Nft }) {
   return (
     <div className="group relative w-full select-none">
-      <div className="glass overflow-hidden rounded-[clamp(1rem,3vw,1.6rem)] p-[clamp(0.5rem,2vw,0.85rem)] shadow-[0_20px_50px_rgba(26,22,48,0.12)] md:p-4">
+      <div className="glass-lite overflow-hidden rounded-[clamp(1rem,3vw,1.6rem)] p-[clamp(0.5rem,2vw,0.85rem)] shadow-[0_20px_50px_rgba(26,22,48,0.12)] md:p-4">
         <div className="overflow-hidden rounded-[clamp(0.75rem,2vw,1.15rem)] bg-gradient-to-br from-cream/40 to-sky/30">
           <img
-            src={nft.src}
+            src={nft.thumb}
             alt={nft.title}
+            width={640}
+            height={640}
             loading="lazy"
+            decoding="async"
             draggable={false}
-            className="aspect-square w-full object-cover transition duration-700 group-hover:scale-105"
+            className="aspect-square w-full object-cover"
           />
         </div>
         <div className="flex items-end justify-between gap-3 px-1 pb-0.5 pt-[clamp(0.65rem,2vw,1rem)] md:px-2 md:pt-4">

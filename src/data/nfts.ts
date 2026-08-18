@@ -1,6 +1,7 @@
 export type Nft = {
   id: number
   src: string
+  thumb: string
   title: string
   edition: string
   vibe: string
@@ -88,6 +89,7 @@ const revealedIds = [6, 8, 14, 20, 23, 37, 38, 39, 41, 43, 58]
 export const nfts: Nft[] = revealedIds.map((id) => ({
   id,
   src: `/assets/${id}.webp`,
+  thumb: `/assets/thumbs/${id}.webp`,
   title: titles[id - 1],
   edition: `#${String(id).padStart(3, '0')} / ${String(revealedIds.length).padStart(3, '0')}`,
   vibe: vibes[id % vibes.length],

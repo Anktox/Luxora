@@ -37,7 +37,7 @@ export function Lightbox({ nft, onClose, onPrev, onNext }: Props) {
           <button
             type="button"
             aria-label="Close"
-            className="absolute inset-0 bg-[#1a1630]/55 backdrop-blur-md"
+            className="absolute inset-0 bg-[#1a1630]/70"
             onClick={onClose}
           />
 
@@ -47,7 +47,7 @@ export function Lightbox({ nft, onClose, onPrev, onNext }: Props) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="glass-strong relative z-10 grid w-full max-w-5xl overflow-hidden rounded-[1.8rem] md:grid-cols-[1.15fr_0.85fr]"
+            className="glass-lite relative z-10 grid w-full max-w-5xl overflow-hidden rounded-[1.8rem] md:grid-cols-[1.15fr_0.85fr]"
           >
             <div className="bg-gradient-to-br from-cream/50 via-mist/30 to-sky/40 p-4 md:p-6">
               <img

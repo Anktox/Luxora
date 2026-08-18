@@ -1,10 +1,14 @@
-import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion'
-import { useMemo, useRef } from 'react'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { nfts, type Nft } from '../data/nfts'
+import { useRef } from 'react'
 
 type Props = {
   onSelect: (nft: Nft) => void
 }
+
+const depthMap = [0, 8, -6, 5, -4]
+const yMap = [0, -18, 14, -10, 20]
+const rotMap = [-3, 2, -1.5, 3, -2.5]
 
 export function Gallery({ onSelect }: Props) {
   const sectionRef = useRef<HTMLElement>(null)
@@ -13,14 +17,11 @@ export function Gallery({ onSelect }: Props) {
     offset: ['start start', 'end end'],
   })
 
-  const x = useTransform(scrollYProgress, [0, 1], ['4%', '-78%'])
-  const rotateX = useTransform(scrollYProgress, [0, 0.5, 1], [6, 0, -4])
+  const x = useTransform(scrollYProgress, [0, 1], ['6%', '-72%'])
   const progressWidth = useTransform(scrollYProgress, [0, 1], ['0%', '100%'])
 
-  const pieces = useMemo(() => nfts, [])
-
   return (
-    <section id="gallery" ref={sectionRef} className="relative h-[420vh]">
+    <section id="gallery" ref={sectionRef} className="relative h-[280vh]">
       <div className="sticky top-0 flex h-[100svh] flex-col overflow-hidden">
         <div className="relative z-10 mx-auto flex w-full max-w-6xl items-end justify-between gap-6 px-5 pb-4 pt-28 md:px-10">
           <div>
@@ -29,7 +30,7 @@ export function Gallery({ onSelect }: Props) {
             </p>
             <h2 className="font-display mt-2 text-4xl text-ink md:text-6xl">Walk the cloud corridor</h2>
             <p className="mt-3 max-w-md text-sm font-light text-ink-soft md:text-base">
-              A 3D drift through early Luxora sightings. Click any being to look closer.
+              A drift through early Luxora sightings. Tap any being to look closer.
             </p>
           </div>
           <div className="glass hidden min-w-[160px] rounded-2xl px-4 py-3 md:block">
@@ -39,22 +40,13 @@ export function Gallery({ onSelect }: Props) {
           </div>
         </div>
 
-        <div
-          className="relative flex flex-1 items-center"
-          style={{ perspective: '1600px', perspectiveOrigin: '50% 50%' }}
-        >
+        <div className="relative flex flex-1 items-center overflow-hidden">
           <motion.div
-            style={{ x, rotateX, transformStyle: 'preserve-3d' }}
-            className="flex w-max items-center gap-6 px-8 will-change-transform md:gap-10 md:px-16"
+            style={{ x }}
+            className="flex w-max items-center gap-5 px-8 will-change-transform md:gap-8 md:px-16"
           >
-            {pieces.map((nft, index) => (
-              <GalleryPiece
-                key={nft.id}
-                nft={nft}
-                index={index}
-                progress={scrollYProgress}
-                onSelect={onSelect}
-              />
+            {nfts.map((nft, index) => (
+              <GalleryPiece key={nft.id} nft={nft} index={index} onSelect={onSelect} />
             ))}
           </motion.div>
         </div>
@@ -72,54 +64,36 @@ export function Gallery({ onSelect }: Props) {
 function GalleryPiece({
   nft,
   index,
-  progress,
   onSelect,
 }: {
   nft: Nft
   index: number
-  progress: MotionValue<number>
   onSelect: (nft: Nft) => void
 }) {
   const pattern = index % 5
-  const depthMap = [0, 70, -50, 40, -30]
-  const yMap = [0, -36, 28, -18, 40]
-  const rotMap = [-6, 4, -3, 7, -5]
-
-  const depth = depthMap[pattern]
-  const floatY = yMap[pattern]
-  const baseRot = rotMap[pattern]
-
-  const local = useTransform(progress, (v) => {
-    const center = index / nfts.length
-    return (v - center) * 18
-  })
-  const rotateY = useTransform(local, (v) => baseRot + v)
 
   return (
-    <motion.button
+    <button
       type="button"
       onClick={() => onSelect(nft)}
+      className="group relative w-[68vw] max-w-[300px] shrink-0 text-left sm:w-[42vw] md:w-[280px]"
       style={{
-        y: floatY,
-        rotateY,
-        z: depth,
-        transformStyle: 'preserve-3d',
+        transform: `translateY(${yMap[pattern]}px) rotate(${rotMap[pattern]}deg) translateZ(${depthMap[pattern]}px)`,
       }}
-      whileHover={{ scale: 1.04, z: depth + 40 }}
-      className="group relative w-[68vw] max-w-[340px] shrink-0 text-left sm:w-[46vw] md:w-[320px]"
     >
-      <div className="glass-strong overflow-hidden rounded-[1.75rem] p-3 transition duration-500 group-hover:shadow-[0_30px_80px_rgba(47,74,155,0.18)]">
-        <div className="relative overflow-hidden rounded-[1.25rem] bg-gradient-to-br from-cream/50 via-mist/40 to-sky/40">
+      <div className="glass-lite overflow-hidden rounded-[1.5rem] p-2.5 shadow-[0_12px_32px_rgba(26,22,48,0.08)]">
+        <div className="overflow-hidden rounded-[1.1rem] bg-cream/40">
           <img
-            src={nft.src}
+            src={nft.thumb}
             alt={nft.title}
+            width={640}
+            height={800}
             loading="lazy"
             decoding="async"
-            className="aspect-[4/5] w-full object-cover transition duration-700 group-hover:scale-[1.04]"
+            className="aspect-[4/5] w-full object-cover"
           />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/25 via-transparent to-transparent opacity-0 transition group-hover:opacity-100" />
         </div>
-        <div className="flex items-end justify-between gap-3 px-2 pb-1 pt-4">
+        <div className="flex items-end justify-between gap-3 px-2 pb-1 pt-3">
           <div>
             <p className="text-[10px] uppercase tracking-[0.24em] text-royal-soft">{nft.vibe}</p>
             <h3 className="font-display mt-1 text-xl leading-none text-ink md:text-2xl">
@@ -129,6 +103,6 @@ function GalleryPiece({
           <span className="text-[11px] tracking-wider text-ink-soft">{nft.edition}</span>
         </div>
       </div>
-    </motion.button>
+    </button>
   )
 }

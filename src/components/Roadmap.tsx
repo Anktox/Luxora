@@ -11,7 +11,7 @@ export function Roadmap() {
   const lineHeight = useTransform(scrollYProgress, [0.1, 0.85], ['0%', '100%'])
 
   return (
-    <section id="roadmap" ref={ref} className="relative px-5 py-24 md:px-10 md:py-32">
+    <section id="roadmap" ref={ref} className="content-auto relative px-5 py-24 md:px-10 md:py-32">
       <div className="mx-auto max-w-6xl">
         <div className="mb-12 max-w-2xl md:mb-16">
           <p className="text-xs font-medium uppercase tracking-[0.3em] text-royal-soft">Roadmap</p>
