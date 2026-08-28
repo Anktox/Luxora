@@ -6,9 +6,10 @@ const REFRESH_MS = 60_000
 
 type LeaderboardProps = {
   onEnterRaffle: () => void
+  dbReady: boolean
 }
 
-export function Leaderboard({ onEnterRaffle }: LeaderboardProps) {
+export function Leaderboard({ onEnterRaffle, dbReady }: LeaderboardProps) {
   const [rows, setRows] = useState<LeaderboardRow[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -25,8 +26,8 @@ export function Leaderboard({ onEnterRaffle }: LeaderboardProps) {
       setRows((prev) => (append ? [...prev, ...leaderboard] : leaderboard))
       if (count !== null) setTotal(count)
       setError('')
-    } catch {
-      setError('Failed to load leaderboard')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load leaderboard')
     }
   }, [])
 
@@ -70,6 +71,10 @@ export function Leaderboard({ onEnterRaffle }: LeaderboardProps) {
 
         {loading ? (
           <div className="px-4 py-12 text-center text-sm text-cream/50">Loading…</div>
+        ) : !dbReady ? (
+          <div className="px-4 py-12 text-center text-sm text-cream/50">
+            Leaderboard unavailable — database offline.
+          </div>
         ) : rows.length === 0 ? (
           <div className="px-4 py-12 text-center text-sm text-cream/50">
             No entries yet. Be the first!

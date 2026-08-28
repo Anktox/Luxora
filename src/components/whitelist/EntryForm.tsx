@@ -9,6 +9,7 @@ type EntryFormProps = {
     referredBy?: string
   }) => Promise<void>
   onBack: () => void
+  registrationOpen: boolean
 }
 
 function validateTwitter(value: string): string | null {
@@ -37,7 +38,12 @@ function validateReplyLink(value: string): string | null {
   return null
 }
 
-export function EntryForm({ initialReferral = '', onSubmit, onBack }: EntryFormProps) {
+export function EntryForm({
+  initialReferral = '',
+  onSubmit,
+  onBack,
+  registrationOpen,
+}: EntryFormProps) {
   const [twitter, setTwitter] = useState('')
   const [wallet, setWallet] = useState('')
   const [replyLink, setReplyLink] = useState('')
@@ -61,6 +67,11 @@ export function EntryForm({ initialReferral = '', onSubmit, onBack }: EntryFormP
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
+      return
+    }
+
+    if (!registrationOpen) {
+      setSubmitError('Registration is offline. Please wait and try again.')
       return
     }
 
@@ -143,10 +154,10 @@ export function EntryForm({ initialReferral = '', onSubmit, onBack }: EntryFormP
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !registrationOpen}
             className="flex-1 rounded-full bg-gold px-6 py-3 text-sm font-semibold tracking-wide text-ink transition-all hover:bg-gold-bright disabled:opacity-50"
           >
-            {loading ? 'Submitting…' : 'Submit Entry →'}
+            {loading ? 'Saving to database…' : registrationOpen ? 'Submit Entry →' : 'Registration offline'}
           </button>
         </div>
       </form>

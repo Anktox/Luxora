@@ -18,11 +18,93 @@ export type LeaderboardRow = {
   created_at: string
 }
 
+export type ConnectionStatus = {
+  ok: boolean
+  error?: string
+}
+
 function getClient() {
   if (!supabase) {
-    throw new Error('Whitelist is temporarily unavailable. Please try again later.')
+    throw new Error(
+      'Registration is offline — database is not configured. Contact support.',
+    )
   }
   return supabase
+}
+
+function mapSupabaseError(error: { code?: string; message: string }): string {
+  if (error.code === '23505') return 'Already registered'
+  if (error.code === 'PGRST301' || error.code === 'PGRST116') {
+    return 'Database connection failed. Please try again.'
+  }
+  return error.message || 'Failed to save your entry. Please try again.'
+}
+
+function isRetryableError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false
+  const message = error.message.toLowerCase()
+  return (
+    message.includes('fetch') ||
+    message.includes('network') ||
+    message.includes('timeout') ||
+    message.includes('connection')
+  )
+}
+
+async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
+  let lastError: unknown
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn()
+    } catch (error) {
+      lastError = error
+      if (attempt < retries && isRetryableError(error)) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))
+        continue
+      }
+      throw error
+    }
+  }
+  throw lastError
+}
+
+function assertValidEntry(entry: unknown): asserts entry is WhitelistEntry {
+  if (
+    !entry ||
+    typeof entry !== 'object' ||
+    !('id' in entry) ||
+    !('twitter' in entry) ||
+    !('wallet' in entry) ||
+    !('referral_code' in entry)
+  ) {
+    throw new Error('Entry was not saved correctly. Please try again.')
+  }
+}
+
+export async function verifySupabaseConnection(): Promise<ConnectionStatus> {
+  if (!supabase) {
+    return {
+      ok: false,
+      error: 'Database is not configured for this deployment.',
+    }
+  }
+
+  try {
+    const { error } = await supabase
+      .from('whitelist_entries')
+      .select('id', { count: 'exact', head: true })
+
+    if (error) {
+      return { ok: false, error: mapSupabaseError(error) }
+    }
+
+    return { ok: true }
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : 'Database connection failed',
+    }
+  }
 }
 
 export async function submitEntry({
@@ -36,53 +118,68 @@ export async function submitEntry({
   replyLink: string
   referredBy?: string | null
 }): Promise<WhitelistEntry> {
-  const client = getClient()
-  const { data: existing } = await client
-    .from('whitelist_entries')
-    .select('id, twitter, wallet')
-    .or(`twitter.eq.${twitter},wallet.eq.${wallet}`)
+  return withRetry(async () => {
+    const client = getClient()
 
-  if (existing && existing.length > 0) {
-    const match = existing[0]
-    if (match.twitter === twitter) {
-      throw new Error('Already registered')
-    }
-    throw new Error('Wallet already registered')
-  }
-
-  const referralCode = generateReferralCode(twitter)
-
-  const { data, error } = await client
-    .from('whitelist_entries')
-    .insert({
-      twitter,
-      wallet,
-      reply_link: replyLink,
-      points: 100,
-      referral_code: referralCode,
-      referred_by: referredBy || null,
-    })
-    .select()
-
-  if (error) throw error
-  if (!data?.[0]) throw new Error('Failed to create entry')
-
-  if (referredBy) {
-    const { data: referrer } = await client
+    const { data: twitterMatch, error: twitterError } = await client
       .from('whitelist_entries')
-      .select('id, points')
-      .eq('referral_code', referredBy)
+      .select('id')
+      .eq('twitter', twitter)
+      .maybeSingle()
+
+    if (twitterError) throw new Error(mapSupabaseError(twitterError))
+    if (twitterMatch) throw new Error('Already registered')
+
+    const { data: walletMatch, error: walletError } = await client
+      .from('whitelist_entries')
+      .select('id')
+      .eq('wallet', wallet)
+      .maybeSingle()
+
+    if (walletError) throw new Error(mapSupabaseError(walletError))
+    if (walletMatch) throw new Error('Wallet already registered')
+
+    const referralCode = generateReferralCode(twitter)
+
+    const { data, error } = await client
+      .from('whitelist_entries')
+      .insert({
+        twitter,
+        wallet,
+        reply_link: replyLink,
+        points: 100,
+        referral_code: referralCode,
+        referred_by: referredBy || null,
+      })
+      .select()
       .single()
 
-    if (referrer) {
-      await client
-        .from('whitelist_entries')
-        .update({ points: referrer.points + 50 })
-        .eq('referral_code', referredBy)
-    }
-  }
+    if (error) throw new Error(mapSupabaseError(error))
 
-  return data[0] as WhitelistEntry
+    const entry = data
+    assertValidEntry(entry)
+
+    if (referredBy) {
+      const { data: referrer, error: referrerError } = await client
+        .from('whitelist_entries')
+        .select('id, points')
+        .eq('referral_code', referredBy)
+        .maybeSingle()
+
+      if (!referrerError && referrer) {
+        const { error: updateError } = await client
+          .from('whitelist_entries')
+          .update({ points: referrer.points + 50 })
+          .eq('referral_code', referredBy)
+
+        if (updateError) {
+          console.error('Referral points update failed:', updateError.message)
+        }
+      }
+    }
+
+    return entry
+  })
 }
 
 export async function getLeaderboard(limit = 50, offset = 0): Promise<LeaderboardRow[]> {
@@ -93,7 +190,7 @@ export async function getLeaderboard(limit = 50, offset = 0): Promise<Leaderboar
     .order('points', { ascending: false })
     .range(offset, offset + limit - 1)
 
-  if (error) throw error
+  if (error) throw new Error(mapSupabaseError(error))
   return (data ?? []) as LeaderboardRow[]
 }
 
@@ -103,6 +200,6 @@ export async function getTotalCount(): Promise<number> {
     .from('whitelist_entries')
     .select('*', { count: 'exact', head: true })
 
-  if (error) throw error
+  if (error) throw new Error(mapSupabaseError(error))
   return count ?? 0
 }

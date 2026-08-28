@@ -1,13 +1,19 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { EntryForm } from '../components/whitelist/EntryForm'
 import { Leaderboard } from '../components/whitelist/Leaderboard'
 import { Success } from '../components/whitelist/Success'
 import { TaskList } from '../components/whitelist/TaskList'
-import { submitEntry, type WhitelistEntry } from '../lib/whitelistApi'
+import { isSupabaseConfigured } from '../lib/supabase'
+import {
+  submitEntry,
+  verifySupabaseConnection,
+  type WhitelistEntry,
+} from '../lib/whitelistApi'
 
 type Screen = 'tasks' | 'form' | 'success' | 'leaderboard'
+type DbStatus = 'checking' | 'ready' | 'offline'
 
 const REF_STORAGE_KEY = 'luxora_ref'
 
@@ -16,6 +22,28 @@ export default function Whitelist() {
   const [tasks, setTasks] = useState([false, false, false])
   const [entry, setEntry] = useState<WhitelistEntry | null>(null)
   const [referralCode, setReferralCode] = useState('')
+  const [dbStatus, setDbStatus] = useState<DbStatus>(
+    isSupabaseConfigured ? 'checking' : 'offline',
+  )
+  const [dbError, setDbError] = useState('')
+
+  const checkDatabase = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      setDbStatus('offline')
+      setDbError('Database is not configured for this deployment.')
+      return
+    }
+
+    setDbStatus('checking')
+    const result = await verifySupabaseConnection()
+    if (result.ok) {
+      setDbStatus('ready')
+      setDbError('')
+    } else {
+      setDbStatus('offline')
+      setDbError(result.error ?? 'Database connection failed.')
+    }
+  }, [])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -29,6 +57,10 @@ export default function Whitelist() {
     }
   }, [])
 
+  useEffect(() => {
+    checkDatabase()
+  }, [checkDatabase])
+
   function toggleTask(index: number) {
     setTasks((prev) => prev.map((done, i) => (i === index ? !done : done)))
   }
@@ -39,10 +71,21 @@ export default function Whitelist() {
     replyLink: string
     referredBy?: string
   }) {
+    if (dbStatus !== 'ready') {
+      throw new Error('Registration is offline. Please wait and try again.')
+    }
+
     const result = await submitEntry(data)
+
+    if (!result?.id || !result.twitter || !result.wallet) {
+      throw new Error('Entry was not saved. Please try again.')
+    }
+
     setEntry(result)
     setScreen('success')
   }
+
+  const registrationOpen = dbStatus === 'ready'
 
   return (
     <div className="relative min-h-[100svh] overflow-hidden">
@@ -73,6 +116,32 @@ export default function Whitelist() {
       </header>
 
       <main className="relative z-10 mx-auto max-w-lg px-4 py-8 pb-16 md:px-6 md:py-12">
+        {dbStatus !== 'ready' && (
+          <div
+            className={`mb-6 rounded-xl border px-4 py-3 text-sm ${
+              dbStatus === 'checking'
+                ? 'border-gold/30 bg-gold/10 text-gold-bright'
+                : 'border-red-400/30 bg-red-500/10 text-red-300'
+            }`}
+          >
+            {dbStatus === 'checking' ? (
+              'Connecting to registration database…'
+            ) : (
+              <div className="space-y-2">
+                <p className="font-medium">Registration is currently offline</p>
+                <p className="text-red-200/80">{dbError}</p>
+                <button
+                  type="button"
+                  onClick={checkDatabase}
+                  className="rounded-full border border-red-300/40 px-4 py-1.5 text-xs font-medium text-red-200 transition-colors hover:bg-red-500/10"
+                >
+                  Retry connection
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         <AnimatePresence mode="wait">
           <motion.div
             key={screen}
@@ -86,6 +155,7 @@ export default function Whitelist() {
                 tasks={tasks}
                 onToggle={toggleTask}
                 onContinue={() => setScreen('form')}
+                registrationOpen={registrationOpen}
               />
             )}
 
@@ -94,6 +164,7 @@ export default function Whitelist() {
                 initialReferral={referralCode}
                 onSubmit={handleSubmit}
                 onBack={() => setScreen('tasks')}
+                registrationOpen={registrationOpen}
               />
             )}
 
@@ -102,7 +173,10 @@ export default function Whitelist() {
             )}
 
             {screen === 'leaderboard' && (
-              <Leaderboard onEnterRaffle={() => setScreen(entry ? 'success' : 'tasks')} />
+              <Leaderboard
+                onEnterRaffle={() => setScreen(entry ? 'success' : 'tasks')}
+                dbReady={registrationOpen}
+              />
             )}
           </motion.div>
         </AnimatePresence>

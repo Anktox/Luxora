@@ -5,6 +5,7 @@ type TaskListProps = {
   tasks: boolean[]
   onToggle: (index: number) => void
   onContinue: () => void
+  registrationOpen: boolean
 }
 
 const taskDefs = [
@@ -28,8 +29,9 @@ const taskDefs = [
   },
 ]
 
-export function TaskList({ tasks, onToggle, onContinue }: TaskListProps) {
+export function TaskList({ tasks, onToggle, onContinue, registrationOpen }: TaskListProps) {
   const allDone = tasks.every(Boolean)
+  const canContinue = allDone && registrationOpen
 
   return (
     <div className="space-y-6">
@@ -85,10 +87,10 @@ export function TaskList({ tasks, onToggle, onContinue }: TaskListProps) {
       <button
         type="button"
         onClick={onContinue}
-        disabled={!allDone}
+        disabled={!canContinue}
         className="w-full rounded-full bg-gold px-6 py-3.5 text-sm font-semibold tracking-wide text-ink transition-all hover:bg-gold-bright disabled:cursor-not-allowed disabled:opacity-40"
       >
-        Continue to Form →
+        {registrationOpen ? 'Continue to Form →' : 'Registration offline'}
       </button>
     </div>
   )
