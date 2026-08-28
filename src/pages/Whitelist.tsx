@@ -8,7 +8,6 @@ import { TaskList } from '../components/whitelist/TaskList'
 import { TwitterGate } from '../components/whitelist/TwitterGate'
 import { isSupabaseConfigured } from '../lib/supabase'
 import {
-  isLeaderboardPublic,
   submitEntry,
   verifySupabaseConnection,
   type WhitelistEntry,
@@ -30,7 +29,6 @@ export default function Whitelist() {
     isSupabaseConfigured ? 'checking' : 'offline',
   )
   const [dbError, setDbError] = useState('')
-  const [leaderboardPublic, setLeaderboardPublic] = useState(false)
 
   const checkDatabase = useCallback(async () => {
     if (!isSupabaseConfigured) {
@@ -44,9 +42,6 @@ export default function Whitelist() {
     if (result.ok) {
       setDbStatus('ready')
       setDbError('')
-      isLeaderboardPublic()
-        .then(setLeaderboardPublic)
-        .catch(() => setLeaderboardPublic(false))
     } else {
       setDbStatus('offline')
       setDbError(result.error ?? 'Database connection failed.')
@@ -139,7 +134,7 @@ export default function Whitelist() {
           >
             LUXORA
           </Link>
-          {screen !== 'leaderboard' && screen !== 'success' && leaderboardPublic && (
+          {screen !== 'leaderboard' && screen !== 'success' && (
             <button
               type="button"
               onClick={() => setScreen('leaderboard')}
@@ -214,11 +209,7 @@ export default function Whitelist() {
             )}
 
             {screen === 'success' && entry && (
-              <Success
-                entry={entry}
-                leaderboardPublic={leaderboardPublic}
-                onViewLeaderboard={() => setScreen('leaderboard')}
-              />
+              <Success entry={entry} onViewLeaderboard={() => setScreen('leaderboard')} />
             )}
 
             {screen === 'leaderboard' && (

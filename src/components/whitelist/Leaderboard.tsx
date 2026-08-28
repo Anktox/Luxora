@@ -23,10 +23,19 @@ function LeaderboardHidden({ onEnterRaffle }: { onEnterRaffle: () => void }) {
           LEADERBOARD
         </h1>
         <p className="mt-4 text-sm text-cream/70 md:text-base">
-          The leaderboard will be revealed later on.
+          Entries will be revealed soon.
         </p>
-        <p className="mt-2 text-xs text-cream/40">
-          Check back soon — rankings go live once registration closes in.
+        <p className="mt-2 text-xs text-cream/50">
+          Wait and check our{' '}
+          <a
+            href="https://x.com/LuxoraRH"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gold-bright underline decoration-gold/40 underline-offset-2 hover:text-gold"
+          >
+            Twitter
+          </a>{' '}
+          for the announcement.
         </p>
       </header>
 
