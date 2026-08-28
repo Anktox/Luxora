@@ -50,10 +50,8 @@ export function TaskList({ tasks, onTaskOpen, registrationOpen, allDone }: TaskL
         {taskDefs.map((task, index) => (
           <div
             key={task.title}
-            className={`glass-strong rounded-2xl border p-5 backdrop-blur-md transition-colors ${
-              tasks[index]
-                ? 'border-gold/30 bg-gold/5'
-                : 'border-white/10 bg-white/5'
+            className={`wl-card rounded-2xl p-5 transition-colors ${
+              tasks[index] ? 'wl-card-done' : ''
             }`}
           >
             <div className="flex items-start justify-between gap-4">

@@ -46,7 +46,7 @@ export function Success({ entry, onViewLeaderboard }: SuccessProps) {
         </p>
       </header>
 
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-left">
+      <div className="wl-card rounded-2xl p-5 text-left">
         <h2 className="mb-4 text-center text-xs font-semibold uppercase tracking-widest text-gold">
           How to Win
         </h2>

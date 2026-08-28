@@ -124,7 +124,7 @@ export function TwitterGate({ registrationOpen, onNewUser, onExistingUser }: Twi
           Follow @LuxoraRH →
         </a>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+        <div className="wl-card rounded-2xl p-5">
           <p className="text-center text-sm text-cream/70">
             Enter your password to view your referral link and points.
           </p>
@@ -134,7 +134,7 @@ export function TwitterGate({ registrationOpen, onNewUser, onExistingUser }: Twi
               placeholder="Your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-cream placeholder:text-cream/30 outline-none focus:border-gold/50"
+              className="wl-input w-full rounded-xl px-4 py-3 text-sm text-cream placeholder:text-cream/30"
             />
             {error && (
               <p className="text-center text-xs text-red-300">{error}</p>
@@ -182,14 +182,14 @@ export function TwitterGate({ registrationOpen, onNewUser, onExistingUser }: Twi
             placeholder="Create password (min 6 characters)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-cream placeholder:text-cream/30 outline-none focus:border-gold/50"
+            className="wl-input w-full rounded-xl px-4 py-3 text-sm text-cream placeholder:text-cream/30"
           />
           <input
             type="password"
             placeholder="Confirm password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-cream placeholder:text-cream/30 outline-none focus:border-gold/50"
+            className="wl-input w-full rounded-xl px-4 py-3 text-sm text-cream placeholder:text-cream/30"
           />
 
           {error && (
@@ -245,7 +245,7 @@ export function TwitterGate({ registrationOpen, onNewUser, onExistingUser }: Twi
             placeholder="@yourhandle"
             value={twitter}
             onChange={(e) => setTwitter(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-cream placeholder:text-cream/30 outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/30"
+            className="wl-input w-full rounded-xl px-4 py-3 text-sm text-cream placeholder:text-cream/30 focus:ring-1 focus:ring-gold/30"
           />
         </div>
 

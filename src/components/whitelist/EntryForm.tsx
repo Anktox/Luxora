@@ -160,7 +160,7 @@ function Field({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-cream placeholder:text-cream/30 outline-none transition-colors focus:border-gold/50 focus:ring-1 focus:ring-gold/30"
+        className="wl-input w-full rounded-xl px-4 py-3 text-sm text-cream placeholder:text-cream/30 transition-colors focus:ring-1 focus:ring-gold/30"
       />
       {error && <p className="mt-1.5 text-xs text-red-300">{error}</p>}
     </div>

@@ -111,6 +111,28 @@
     color: transparent;
   }
 
+  .wl-card {
+    background: rgba(20, 16, 38, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+  }
+
+  .wl-card-done {
+    background: rgba(201, 162, 74, 0.14);
+    border-color: rgba(201, 162, 74, 0.35);
+  }
+
+  .wl-input {
+    background: rgba(12, 10, 22, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .wl-input:focus {
+    border-color: rgba(201, 162, 74, 0.5);
+    outline: none;
+    box-shadow: 0 0 0 1px rgba(201, 162, 74, 0.25);
+  }
+
   .hero-backdrop {
     background:
       radial-gradient(ellipse 90% 50% at 50% 18%, rgba(232, 197, 106, 0.22), transparent 60%),

@@ -148,7 +148,7 @@ export function Leaderboard({ onEnterRaffle, dbReady }: LeaderboardProps) {
         </p>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+      <div className="overflow-hidden rounded-2xl wl-card">
         <div className="grid grid-cols-[3rem_1fr_5rem] gap-2 border-b border-white/10 px-4 py-3 text-xs font-semibold uppercase tracking-widest text-gold">
           <span>Rank</span>
           <span>Twitter</span>
