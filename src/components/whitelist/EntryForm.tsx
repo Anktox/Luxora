@@ -123,7 +123,7 @@ export function EntryForm({
             disabled={loading || !registrationOpen}
             className="flex-1 rounded-full bg-gold px-6 py-3 text-sm font-semibold tracking-wide text-ink transition-all hover:bg-gold-bright disabled:opacity-50"
           >
-            {loading ? 'Saving to database…' : registrationOpen ? 'Submit Entry →' : 'Registration offline'}
+            {loading ? 'Connecting & saving…' : registrationOpen ? 'Submit Entry →' : 'Registration offline'}
           </button>
         </div>
       </form>

@@ -54,7 +54,11 @@ function isRetryableError(error: unknown): boolean {
   )
 }
 
-async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  retries = 3,
+  baseDelayMs = 1500,
+): Promise<T> {
   let lastError: unknown
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
@@ -62,13 +66,32 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
     } catch (error) {
       lastError = error
       if (attempt < retries && isRetryableError(error)) {
-        await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))
+        await new Promise((resolve) => setTimeout(resolve, baseDelayMs * (attempt + 1)))
         continue
       }
       throw error
     }
   }
   throw lastError
+}
+
+async function pingSupabase(): Promise<ConnectionStatus> {
+  if (!supabase) {
+    return {
+      ok: false,
+      error: 'Database is not configured for this deployment.',
+    }
+  }
+
+  const { error } = await supabase
+    .from('whitelist_entries')
+    .select('id', { count: 'exact', head: true })
+
+  if (error) {
+    return { ok: false, error: mapSupabaseError(error) }
+  }
+
+  return { ok: true }
 }
 
 function assertValidEntry(entry: unknown): asserts entry is WhitelistEntry {
@@ -85,29 +108,36 @@ function assertValidEntry(entry: unknown): asserts entry is WhitelistEntry {
 }
 
 export async function verifySupabaseConnection(): Promise<ConnectionStatus> {
-  if (!supabase) {
-    return {
-      ok: false,
-      error: 'Database is not configured for this deployment.',
-    }
-  }
-
   try {
-    const { error } = await supabase
-      .from('whitelist_entries')
-      .select('id', { count: 'exact', head: true })
-
-    if (error) {
-      return { ok: false, error: mapSupabaseError(error) }
-    }
-
-    return { ok: true }
+    return await pingSupabase()
   } catch (error) {
     return {
       ok: false,
       error: error instanceof Error ? error.message : 'Database connection failed',
     }
   }
+}
+
+/** Retry ping while free-tier DB wakes from cold pause (can take 2–5s). */
+export async function warmSupabaseConnection(): Promise<ConnectionStatus> {
+  const attempts = 4
+  const delayMs = 1500
+
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const result = await verifySupabaseConnection()
+    if (result.ok) return result
+
+    if (attempt < attempts - 1) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs * (attempt + 1)))
+    } else {
+      return {
+        ok: false,
+        error: result.error ?? 'Database is waking up. Please try again.',
+      }
+    }
+  }
+
+  return { ok: false, error: 'Database connection failed.' }
 }
 
 export async function checkTwitterExists(twitter: string): Promise<boolean> {

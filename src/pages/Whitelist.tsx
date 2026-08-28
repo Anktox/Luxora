@@ -9,7 +9,7 @@ import { TwitterGate } from '../components/whitelist/TwitterGate'
 import { isSupabaseConfigured } from '../lib/supabase'
 import {
   submitEntry,
-  verifySupabaseConnection,
+  warmSupabaseConnection,
   type WhitelistEntry,
 } from '../lib/whitelistApi'
 
@@ -29,6 +29,7 @@ export default function Whitelist() {
     isSupabaseConfigured ? 'checking' : 'offline',
   )
   const [dbError, setDbError] = useState('')
+  const [dbWarming, setDbWarming] = useState(false)
 
   const checkDatabase = useCallback(async () => {
     if (!isSupabaseConfigured) {
@@ -38,7 +39,13 @@ export default function Whitelist() {
     }
 
     setDbStatus('checking')
-    const result = await verifySupabaseConnection()
+    setDbWarming(false)
+    const warmingTimer = window.setTimeout(() => setDbWarming(true), 1200)
+
+    const result = await warmSupabaseConnection()
+    window.clearTimeout(warmingTimer)
+    setDbWarming(false)
+
     if (result.ok) {
       setDbStatus('ready')
       setDbError('')
@@ -102,6 +109,12 @@ export default function Whitelist() {
       throw new Error('Registration is offline. Please wait and try again.')
     }
 
+    // Re-warm before submit in case DB went idle while user completed tasks
+    const warm = await warmSupabaseConnection()
+    if (!warm.ok) {
+      throw new Error(warm.error ?? 'Database is waking up. Please try again.')
+    }
+
     const result = await submitEntry({
       twitter,
       wallet: data.wallet,
@@ -156,7 +169,9 @@ export default function Whitelist() {
             }`}
           >
             {dbStatus === 'checking' ? (
-              'Connecting to registration database…'
+              dbWarming
+                ? 'Waking up database — first load may take a few seconds…'
+                : 'Connecting to registration database…'
             ) : (
               <div className="space-y-2">
                 <p className="font-medium">Registration is currently offline</p>
