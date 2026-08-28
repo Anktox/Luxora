@@ -8,11 +8,12 @@ const LUXORA_TWITTER = 'https://x.com/LuxoraRH'
 
 type TwitterGateProps = {
   registrationOpen: boolean
+  dbChecking?: boolean
   onNewUser: (twitter: string, passwordHash: string) => void
   onExistingUser: (entry: WhitelistEntry | null) => void
 }
 
-export function TwitterGate({ registrationOpen, onNewUser, onExistingUser }: TwitterGateProps) {
+export function TwitterGate({ registrationOpen, dbChecking = false, onNewUser, onExistingUser }: TwitterGateProps) {
   const [twitter, setTwitter] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -257,10 +258,10 @@ export function TwitterGate({ registrationOpen, onNewUser, onExistingUser }: Twi
 
         <button
           type="submit"
-          disabled={loading || !registrationOpen}
+          disabled={loading || !registrationOpen || dbChecking}
           className="w-full rounded-full bg-gold px-6 py-3.5 text-sm font-semibold tracking-wide text-ink transition-all hover:bg-gold-bright disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {loading ? 'Checking…' : 'Continue →'}
+          {loading ? 'Checking…' : dbChecking ? 'Waking up…' : 'Continue →'}
         </button>
       </form>
     </div>

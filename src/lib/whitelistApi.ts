@@ -75,7 +75,7 @@ async function withRetry<T>(
   throw lastError
 }
 
-async function pingSupabase(): Promise<ConnectionStatus> {
+async function pingSupabase(timeoutMs = 6000): Promise<ConnectionStatus> {
   if (!supabase) {
     return {
       ok: false,
@@ -83,15 +83,23 @@ async function pingSupabase(): Promise<ConnectionStatus> {
     }
   }
 
-  const { error } = await supabase
-    .from('whitelist_entries')
-    .select('id', { count: 'exact', head: true })
-
-  if (error) {
-    return { ok: false, error: mapSupabaseError(error) }
+  try {
+    const result = await Promise.race([
+      supabase
+        .from('whitelist_entries')
+        .select('id', { count: 'exact', head: true })
+        .then(({ error }) => (error ? { ok: false as const, error: mapSupabaseError(error) } : { ok: true as const })),
+      new Promise<ConnectionStatus>((resolve) =>
+        setTimeout(() => resolve({ ok: false, error: 'Connection timed out' }), timeoutMs),
+      ),
+    ])
+    return result
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : 'Database connection failed',
+    }
   }
-
-  return { ok: true }
 }
 
 function assertValidEntry(entry: unknown): asserts entry is WhitelistEntry {
@@ -107,24 +115,18 @@ function assertValidEntry(entry: unknown): asserts entry is WhitelistEntry {
   }
 }
 
+/** Quick background ping on page load. */
 export async function verifySupabaseConnection(): Promise<ConnectionStatus> {
-  try {
-    return await pingSupabase()
-  } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : 'Database connection failed',
-    }
-  }
+  return pingSupabase(6000)
 }
 
-/** Retry ping while free-tier DB wakes from cold pause (can take 2–5s). */
+/** Full retry for submit — DB may need time to wake on free tier. */
 export async function warmSupabaseConnection(): Promise<ConnectionStatus> {
-  const attempts = 4
-  const delayMs = 1500
+  const attempts = 3
+  const delayMs = 1200
 
   for (let attempt = 0; attempt < attempts; attempt++) {
-    const result = await verifySupabaseConnection()
+    const result = await pingSupabase(8000)
     if (result.ok) return result
 
     if (attempt < attempts - 1) {
@@ -138,6 +140,23 @@ export async function warmSupabaseConnection(): Promise<ConnectionStatus> {
   }
 
   return { ok: false, error: 'Database connection failed.' }
+}
+
+/** Fire server keepalive + client ping without blocking UI. */
+export function startBackgroundWarmup(onReady: () => void, onOffline: (msg: string) => void) {
+  fetch('/api/keepalive').catch(() => {})
+
+  verifySupabaseConnection().then((result) => {
+    if (result.ok) {
+      onReady()
+      return
+    }
+
+    warmSupabaseConnection().then((retry) => {
+      if (retry.ok) onReady()
+      else onOffline(retry.error ?? 'Database connection failed.')
+    })
+  })
 }
 
 export async function checkTwitterExists(twitter: string): Promise<boolean> {

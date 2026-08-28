@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { EntryForm } from '../components/whitelist/EntryForm'
 import { Leaderboard } from '../components/whitelist/Leaderboard'
@@ -8,6 +8,7 @@ import { TaskList } from '../components/whitelist/TaskList'
 import { TwitterGate } from '../components/whitelist/TwitterGate'
 import { isSupabaseConfigured } from '../lib/supabase'
 import {
+  startBackgroundWarmup,
   submitEntry,
   warmSupabaseConnection,
   type WhitelistEntry,
@@ -29,31 +30,6 @@ export default function Whitelist() {
     isSupabaseConfigured ? 'checking' : 'offline',
   )
   const [dbError, setDbError] = useState('')
-  const [dbWarming, setDbWarming] = useState(false)
-
-  const checkDatabase = useCallback(async () => {
-    if (!isSupabaseConfigured) {
-      setDbStatus('offline')
-      setDbError('Database is not configured for this deployment.')
-      return
-    }
-
-    setDbStatus('checking')
-    setDbWarming(false)
-    const warmingTimer = window.setTimeout(() => setDbWarming(true), 1200)
-
-    const result = await warmSupabaseConnection()
-    window.clearTimeout(warmingTimer)
-    setDbWarming(false)
-
-    if (result.ok) {
-      setDbStatus('ready')
-      setDbError('')
-    } else {
-      setDbStatus('offline')
-      setDbError(result.error ?? 'Database connection failed.')
-    }
-  }, [])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -68,11 +44,26 @@ export default function Whitelist() {
   }, [])
 
   useEffect(() => {
-    checkDatabase()
-  }, [checkDatabase])
+    if (!isSupabaseConfigured) {
+      setDbStatus('offline')
+      setDbError('Database is not configured for this deployment.')
+      return
+    }
+
+    startBackgroundWarmup(
+      () => {
+        setDbStatus('ready')
+        setDbError('')
+      },
+      (error) => {
+        setDbStatus('offline')
+        setDbError(error)
+      },
+    )
+  }, [])
 
   const allTasksDone = tasks.every(Boolean)
-  const registrationOpen = dbStatus === 'ready'
+  const registrationOpen = dbStatus !== 'offline'
 
   useEffect(() => {
     if (screen === 'tasks' && allTasksDone && registrationOpen) {
@@ -105,11 +96,6 @@ export default function Whitelist() {
     replyLink: string
     referredBy?: string
   }) {
-    if (dbStatus !== 'ready') {
-      throw new Error('Registration is offline. Please wait and try again.')
-    }
-
-    // Re-warm before submit in case DB went idle while user completed tasks
     const warm = await warmSupabaseConnection()
     if (!warm.ok) {
       throw new Error(warm.error ?? 'Database is waking up. Please try again.')
@@ -160,31 +146,31 @@ export default function Whitelist() {
       </header>
 
       <main className="relative z-10 mx-auto max-w-lg px-4 py-8 pb-16 md:px-6 md:py-12">
-        {dbStatus !== 'ready' && (
-          <div
-            className={`mb-6 rounded-xl border px-4 py-3 text-sm ${
-              dbStatus === 'checking'
-                ? 'border-gold/30 bg-gold/10 text-gold-bright'
-                : 'border-red-400/30 bg-red-500/10 text-red-300'
-            }`}
-          >
-            {dbStatus === 'checking' ? (
-              dbWarming
-                ? 'Waking up database — first load may take a few seconds…'
-                : 'Connecting to registration database…'
-            ) : (
-              <div className="space-y-2">
-                <p className="font-medium">Registration is currently offline</p>
-                <p className="text-red-200/80">{dbError}</p>
-                <button
-                  type="button"
-                  onClick={checkDatabase}
-                  className="rounded-full border border-red-300/40 px-4 py-1.5 text-xs font-medium text-red-200 transition-colors hover:bg-red-500/10"
-                >
-                  Retry connection
-                </button>
-              </div>
-            )}
+        {dbStatus === 'offline' && (
+          <div className="mb-6 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            <div className="space-y-2">
+              <p className="font-medium">Registration is currently offline</p>
+              <p className="text-red-200/80">{dbError}</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setDbStatus('checking')
+                  startBackgroundWarmup(
+                    () => {
+                      setDbStatus('ready')
+                      setDbError('')
+                    },
+                    (error) => {
+                      setDbStatus('offline')
+                      setDbError(error)
+                    },
+                  )
+                }}
+                className="rounded-full border border-red-300/40 px-4 py-1.5 text-xs font-medium text-red-200 transition-colors hover:bg-red-500/10"
+              >
+                Retry connection
+              </button>
+            </div>
           </div>
         )}
 
@@ -199,6 +185,7 @@ export default function Whitelist() {
             {screen === 'twitter' && (
               <TwitterGate
                 registrationOpen={registrationOpen}
+                dbChecking={dbStatus === 'checking'}
                 onNewUser={handleNewUser}
                 onExistingUser={handleExistingUser}
               />
