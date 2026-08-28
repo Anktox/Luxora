@@ -193,24 +193,7 @@ export async function submitEntry({
     const entry = data
     assertValidEntry(entry)
 
-    if (referredBy) {
-      const { data: referrer, error: referrerError } = await client
-        .from('whitelist_entries')
-        .select('id, points')
-        .eq('referral_code', referredBy)
-        .maybeSingle()
-
-      if (!referrerError && referrer) {
-        const { error: updateError } = await client
-          .from('whitelist_entries')
-          .update({ points: referrer.points + 50 })
-          .eq('referral_code', referredBy)
-
-        if (updateError) {
-          console.error('Referral points update failed:', updateError.message)
-        }
-      }
-    }
+    // Referral +50 points handled by database trigger (on_referral_signup)
 
     return entry
   })
