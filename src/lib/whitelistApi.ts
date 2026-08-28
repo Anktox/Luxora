@@ -19,6 +19,8 @@ export type LeaderboardRow = {
   created_at: string
 }
 
+export const LEADERBOARD_REVEAL_MIN = 1000
+
 export type ConnectionStatus = {
   ok: boolean
   error?: string
@@ -219,4 +221,9 @@ export async function getTotalCount(): Promise<number> {
 
   if (error) throw new Error(mapSupabaseError(error))
   return count ?? 0
+}
+
+export async function isLeaderboardPublic(): Promise<boolean> {
+  const count = await getTotalCount()
+  return count > LEADERBOARD_REVEAL_MIN
 }

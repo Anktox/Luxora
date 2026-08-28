@@ -5,6 +5,7 @@ const REFERRAL_BASE = 'https://luxorarh.xyz/whitelist?ref='
 
 type SuccessProps = {
   entry: WhitelistEntry
+  leaderboardPublic: boolean
   onViewLeaderboard: () => void
 }
 
@@ -13,7 +14,7 @@ function shortenWallet(wallet: string): string {
   return `${wallet.slice(0, 6)}...${wallet.slice(-3)}`
 }
 
-export function Success({ entry, onViewLeaderboard }: SuccessProps) {
+export function Success({ entry, leaderboardPublic, onViewLeaderboard }: SuccessProps) {
   const [copied, setCopied] = useState(false)
   const referralLink = `${REFERRAL_BASE}${entry.referral_code}`
 
@@ -92,13 +93,15 @@ export function Success({ entry, onViewLeaderboard }: SuccessProps) {
         <p className="mt-3 text-xs text-cream/50">Each referral = +50 points</p>
       </div>
 
-      <button
-        type="button"
-        onClick={onViewLeaderboard}
-        className="w-full rounded-full border border-cream/20 px-6 py-3 text-sm font-medium text-cream transition-colors hover:border-cream/40"
-      >
-        View Leaderboard →
-      </button>
+      {leaderboardPublic && (
+        <button
+          type="button"
+          onClick={onViewLeaderboard}
+          className="w-full rounded-full border border-cream/20 px-6 py-3 text-sm font-medium text-cream transition-colors hover:border-cream/40"
+        >
+          View Leaderboard →
+        </button>
+      )}
     </div>
   )
 }

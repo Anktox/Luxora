@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { getLeaderboard, getTotalCount, type LeaderboardRow } from '../../lib/whitelistApi'
+import {
+  getLeaderboard,
+  getTotalCount,
+  isLeaderboardPublic,
+  type LeaderboardRow,
+} from '../../lib/whitelistApi'
 
 const PAGE_SIZE = 50
 const REFRESH_MS = 60_000
@@ -9,12 +14,55 @@ type LeaderboardProps = {
   dbReady: boolean
 }
 
+function LeaderboardHidden({ onEnterRaffle }: { onEnterRaffle: () => void }) {
+  return (
+    <div className="space-y-6 text-center">
+      <div className="text-5xl">🏮</div>
+      <header>
+        <h1 className="font-display text-3xl tracking-[0.12em] text-cream md:text-4xl">
+          LEADERBOARD
+        </h1>
+        <p className="mt-4 text-sm text-cream/70 md:text-base">
+          The leaderboard will be revealed later on.
+        </p>
+        <p className="mt-2 text-xs text-cream/40">
+          Check back soon — rankings go live once registration closes in.
+        </p>
+      </header>
+
+      <button
+        type="button"
+        onClick={onEnterRaffle}
+        className="w-full rounded-full bg-gold px-6 py-3.5 text-sm font-semibold tracking-wide text-ink transition-all hover:bg-gold-bright"
+      >
+        Enter Raffle →
+      </button>
+    </div>
+  )
+}
+
 export function Leaderboard({ onEnterRaffle, dbReady }: LeaderboardProps) {
+  const [isPublic, setIsPublic] = useState<boolean | null>(null)
   const [rows, setRows] = useState<LeaderboardRow[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
+
+  const checkVisibility = useCallback(async () => {
+    if (!dbReady) {
+      setIsPublic(false)
+      return false
+    }
+    try {
+      const visible = await isLeaderboardPublic()
+      setIsPublic(visible)
+      return visible
+    } catch {
+      setIsPublic(false)
+      return false
+    }
+  }, [dbReady])
 
   const fetchData = useCallback(async (offset = 0, append = false) => {
     try {
@@ -32,17 +80,46 @@ export function Leaderboard({ onEnterRaffle, dbReady }: LeaderboardProps) {
   }, [])
 
   useEffect(() => {
-    setLoading(true)
-    fetchData(0).finally(() => setLoading(false))
+    let cancelled = false
+
+    async function load() {
+      setLoading(true)
+      const visible = await checkVisibility()
+      if (cancelled) return
+
+      if (visible) {
+        await fetchData(0)
+      }
+      if (!cancelled) setLoading(false)
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [checkVisibility, fetchData])
+
+  useEffect(() => {
+    if (!isPublic || !dbReady) return
 
     const interval = setInterval(() => fetchData(0), REFRESH_MS)
     return () => clearInterval(interval)
-  }, [fetchData])
+  }, [isPublic, dbReady, fetchData])
 
   async function loadMore() {
     setLoadingMore(true)
     await fetchData(rows.length, true)
     setLoadingMore(false)
+  }
+
+  if (loading || isPublic === null) {
+    return (
+      <div className="py-16 text-center text-sm text-cream/50">Loading…</div>
+    )
+  }
+
+  if (!isPublic) {
+    return <LeaderboardHidden onEnterRaffle={onEnterRaffle} />
   }
 
   const hasMore = rows.length < total
@@ -69,15 +146,9 @@ export function Leaderboard({ onEnterRaffle, dbReady }: LeaderboardProps) {
           <span className="text-right">Points</span>
         </div>
 
-        {loading ? (
-          <div className="px-4 py-12 text-center text-sm text-cream/50">Loading…</div>
-        ) : !dbReady ? (
+        {rows.length === 0 ? (
           <div className="px-4 py-12 text-center text-sm text-cream/50">
-            Leaderboard unavailable — database offline.
-          </div>
-        ) : rows.length === 0 ? (
-          <div className="px-4 py-12 text-center text-sm text-cream/50">
-            No entries yet. Be the first!
+            No entries yet.
           </div>
         ) : (
           <ul>
@@ -95,7 +166,7 @@ export function Leaderboard({ onEnterRaffle, dbReady }: LeaderboardProps) {
         )}
       </div>
 
-      {hasMore && !loading && (
+      {hasMore && (
         <button
           type="button"
           onClick={loadMore}
