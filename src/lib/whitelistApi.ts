@@ -1,3 +1,4 @@
+import { hashPassword } from './password'
 import { generateReferralCode } from './generateCode'
 import { supabase } from './supabase'
 
@@ -107,16 +108,48 @@ export async function verifySupabaseConnection(): Promise<ConnectionStatus> {
   }
 }
 
+export async function checkTwitterExists(twitter: string): Promise<boolean> {
+  const client = getClient()
+  const { data, error } = await client
+    .from('whitelist_entries')
+    .select('id')
+    .eq('twitter', twitter)
+    .maybeSingle()
+
+  if (error) throw new Error(mapSupabaseError(error))
+  return Boolean(data)
+}
+
+export async function getEntryWithPassword(
+  twitter: string,
+  password: string,
+): Promise<WhitelistEntry | null> {
+  const client = getClient()
+  const passwordHash = await hashPassword(password)
+
+  const { data, error } = await client
+    .from('whitelist_entries')
+    .select('id, twitter, wallet, reply_link, points, referral_code, referred_by, created_at')
+    .eq('twitter', twitter)
+    .eq('password_hash', passwordHash)
+    .maybeSingle()
+
+  if (error) throw new Error(mapSupabaseError(error))
+  return (data as WhitelistEntry | null) ?? null
+}
+
 export async function submitEntry({
   twitter,
   wallet,
   replyLink,
   referredBy,
+  passwordHash,
 }: {
   twitter: string
   wallet: string
   replyLink: string
   referredBy?: string | null
+  passwordHash: string
 }): Promise<WhitelistEntry> {
   return withRetry(async () => {
     const client = getClient()
@@ -150,6 +183,7 @@ export async function submitEntry({
         points: 100,
         referral_code: referralCode,
         referred_by: referredBy || null,
+        password_hash: passwordHash,
       })
       .select()
       .single()

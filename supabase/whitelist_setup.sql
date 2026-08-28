@@ -8,6 +8,7 @@ CREATE TABLE whitelist_entries (
   points INTEGER DEFAULT 100,
   referral_code VARCHAR(20) UNIQUE,
   referred_by VARCHAR(20),
+  password_hash TEXT NOT NULL DEFAULT '',
   created_at TIMESTAMP DEFAULT NOW()
 );
 

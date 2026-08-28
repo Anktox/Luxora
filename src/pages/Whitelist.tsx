@@ -5,6 +5,7 @@ import { EntryForm } from '../components/whitelist/EntryForm'
 import { Leaderboard } from '../components/whitelist/Leaderboard'
 import { Success } from '../components/whitelist/Success'
 import { TaskList } from '../components/whitelist/TaskList'
+import { TwitterGate } from '../components/whitelist/TwitterGate'
 import { isSupabaseConfigured } from '../lib/supabase'
 import {
   submitEntry,
@@ -12,14 +13,16 @@ import {
   type WhitelistEntry,
 } from '../lib/whitelistApi'
 
-type Screen = 'tasks' | 'form' | 'success' | 'leaderboard'
+type Screen = 'twitter' | 'tasks' | 'form' | 'success' | 'leaderboard'
 type DbStatus = 'checking' | 'ready' | 'offline'
 
 const REF_STORAGE_KEY = 'luxora_ref'
 
 export default function Whitelist() {
-  const [screen, setScreen] = useState<Screen>('tasks')
+  const [screen, setScreen] = useState<Screen>('twitter')
   const [tasks, setTasks] = useState([false, false, false])
+  const [twitter, setTwitter] = useState('')
+  const [passwordHash, setPasswordHash] = useState('')
   const [entry, setEntry] = useState<WhitelistEntry | null>(null)
   const [referralCode, setReferralCode] = useState('')
   const [dbStatus, setDbStatus] = useState<DbStatus>(
@@ -61,12 +64,36 @@ export default function Whitelist() {
     checkDatabase()
   }, [checkDatabase])
 
-  function toggleTask(index: number) {
-    setTasks((prev) => prev.map((done, i) => (i === index ? !done : done)))
+  const allTasksDone = tasks.every(Boolean)
+  const registrationOpen = dbStatus === 'ready'
+
+  useEffect(() => {
+    if (screen === 'tasks' && allTasksDone && registrationOpen) {
+      const timer = setTimeout(() => setScreen('form'), 900)
+      return () => clearTimeout(timer)
+    }
+  }, [screen, allTasksDone, registrationOpen])
+
+  function handleTaskOpen(index: number) {
+    setTasks((prev) => prev.map((done, i) => (i === index ? true : done)))
+  }
+
+  function handleNewUser(handle: string, hash: string) {
+    setTwitter(handle)
+    setPasswordHash(hash)
+    setTasks([false, false, false])
+    setScreen('tasks')
+  }
+
+  function handleExistingUser(existingEntry: WhitelistEntry | null) {
+    if (existingEntry) {
+      setEntry(existingEntry)
+      setTwitter(existingEntry.twitter)
+      setScreen('success')
+    }
   }
 
   async function handleSubmit(data: {
-    twitter: string
     wallet: string
     replyLink: string
     referredBy?: string
@@ -75,7 +102,13 @@ export default function Whitelist() {
       throw new Error('Registration is offline. Please wait and try again.')
     }
 
-    const result = await submitEntry(data)
+    const result = await submitEntry({
+      twitter,
+      wallet: data.wallet,
+      replyLink: data.replyLink,
+      referredBy: data.referredBy,
+      passwordHash,
+    })
 
     if (!result?.id || !result.twitter || !result.wallet) {
       throw new Error('Entry was not saved. Please try again.')
@@ -84,8 +117,6 @@ export default function Whitelist() {
     setEntry(result)
     setScreen('success')
   }
-
-  const registrationOpen = dbStatus === 'ready'
 
   return (
     <div className="relative min-h-[100svh] overflow-hidden">
@@ -150,17 +181,26 @@ export default function Whitelist() {
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.25 }}
           >
+            {screen === 'twitter' && (
+              <TwitterGate
+                registrationOpen={registrationOpen}
+                onNewUser={handleNewUser}
+                onExistingUser={handleExistingUser}
+              />
+            )}
+
             {screen === 'tasks' && (
               <TaskList
                 tasks={tasks}
-                onToggle={toggleTask}
-                onContinue={() => setScreen('form')}
+                onTaskOpen={handleTaskOpen}
                 registrationOpen={registrationOpen}
+                allDone={allTasksDone}
               />
             )}
 
             {screen === 'form' && (
               <EntryForm
+                twitter={twitter}
                 initialReferral={referralCode}
                 onSubmit={handleSubmit}
                 onBack={() => setScreen('tasks')}
@@ -174,7 +214,7 @@ export default function Whitelist() {
 
             {screen === 'leaderboard' && (
               <Leaderboard
-                onEnterRaffle={() => setScreen(entry ? 'success' : 'tasks')}
+                onEnterRaffle={() => setScreen(entry ? 'success' : 'twitter')}
                 dbReady={registrationOpen}
               />
             )}

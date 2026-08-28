@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react'
+import { validateReplyLink, validateWallet } from '../../lib/whitelistValidation'
 
 type EntryFormProps = {
+  twitter: string
   initialReferral?: string
   onSubmit: (data: {
-    twitter: string
     wallet: string
     replyLink: string
     referredBy?: string
@@ -12,39 +13,13 @@ type EntryFormProps = {
   registrationOpen: boolean
 }
 
-function validateTwitter(value: string): string | null {
-  const cleaned = value.replace('@', '').trim().toLowerCase()
-  if (!cleaned) return 'Twitter username is required'
-  if (!/^[a-z0-9_]{1,15}$/.test(cleaned)) return 'Invalid Twitter username'
-  return null
-}
-
-function validateWallet(value: string): string | null {
-  const trimmed = value.trim()
-  if (!trimmed) return 'Wallet address is required'
-  if (!trimmed.startsWith('0x') || trimmed.length !== 42) {
-    return 'Must be a valid EVM address (0x + 40 hex chars)'
-  }
-  if (!/^0x[a-fA-F0-9]{40}$/.test(trimmed)) return 'Invalid wallet address format'
-  return null
-}
-
-function validateReplyLink(value: string): string | null {
-  const trimmed = value.trim()
-  if (!trimmed) return 'Reply link is required'
-  if (!trimmed.includes('x.com') && !trimmed.includes('twitter.com')) {
-    return 'Must be a valid X/Twitter link'
-  }
-  return null
-}
-
 export function EntryForm({
+  twitter,
   initialReferral = '',
   onSubmit,
   onBack,
   registrationOpen,
 }: EntryFormProps) {
-  const [twitter, setTwitter] = useState('')
   const [wallet, setWallet] = useState('')
   const [replyLink, setReplyLink] = useState('')
   const [referral, setReferral] = useState(initialReferral)
@@ -57,11 +32,9 @@ export function EntryForm({
     setSubmitError('')
 
     const nextErrors: Record<string, string> = {}
-    const twitterErr = validateTwitter(twitter)
     const walletErr = validateWallet(wallet)
-    const replyErr = validateReplyLink(replyLink)
+    const replyErr = validateReplyLink(replyLink, twitter)
 
-    if (twitterErr) nextErrors.twitter = twitterErr
     if (walletErr) nextErrors.wallet = walletErr
     if (replyErr) nextErrors.replyLink = replyErr
 
@@ -80,7 +53,6 @@ export function EntryForm({
 
     try {
       await onSubmit({
-        twitter: twitter.replace('@', '').trim().toLowerCase(),
         wallet: wallet.trim(),
         replyLink: replyLink.trim(),
         referredBy: referral.trim() || undefined,
@@ -98,19 +70,13 @@ export function EntryForm({
         <h1 className="font-display text-3xl tracking-[0.12em] text-cream md:text-4xl">
           ALMOST THERE
         </h1>
-        <p className="mt-2 text-sm text-cream/70">Complete your whitelist entry</p>
+        <p className="mt-2 text-sm text-cream/70">
+          Finish your entry for{' '}
+          <span className="text-gold-bright">@{twitter}</span>
+        </p>
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        <Field
-          label="Twitter Username"
-          id="twitter"
-          placeholder="@yourhandle"
-          value={twitter}
-          onChange={setTwitter}
-          error={errors.twitter}
-        />
-
         <Field
           label="EVM Wallet Address"
           id="wallet"
@@ -123,11 +89,11 @@ export function EntryForm({
         <Field
           label="Your Reply Link"
           id="replyLink"
-          placeholder="https://x.com/..."
+          placeholder="https://x.com/yourhandle/status/..."
           value={replyLink}
           onChange={setReplyLink}
           error={errors.replyLink}
-          hint="Paste the link to your reply on the pinned post"
+          hint="Paste the link to YOUR reply on the pinned post — must match your Twitter above"
         />
 
         <Field
