@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 
-const links = [
+type NavLink =
+  | { label: string; href: string }
+  | { label: string; to: string }
+
+const links: NavLink[] = [
   { label: 'World', href: '#world' },
   { label: 'Collection', href: '#traits' },
   { label: 'Gallery', href: '#gallery' },
   { label: 'The Light', href: '#light' },
   { label: 'Roadmap', href: '#roadmap' },
+  { label: 'Whitelist', to: '/whitelist' },
 ]
 
 type NavTheme = 'light' | 'dark'
@@ -73,22 +79,44 @@ export function Nav() {
           LUXORA
         </a>
         <nav className="hidden items-center gap-6 lg:flex">
-          {links.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className={`text-sm font-medium tracking-wide transition-colors duration-300 ${styles.link}`}
-            >
-              {link.label}
-            </a>
-          ))}
+          {links.map((link) =>
+            'to' in link ? (
+              <Link
+                key={link.label}
+                to={link.to}
+                className={`text-sm font-medium tracking-wide transition-colors duration-300 ${styles.link}`}
+              >
+                {link.label}
+              </Link>
+            ) : (
+              <a
+                key={link.label}
+                href={link.href}
+                className={`text-sm font-medium tracking-wide transition-colors duration-300 ${styles.link}`}
+              >
+                {link.label}
+              </a>
+            ),
+          )}
         </nav>
-        <a
-          href="#gallery"
-          className={`rounded-full px-4 py-2 text-xs font-medium tracking-wider transition-colors duration-300 md:text-sm ${styles.cta}`}
-        >
-          Enter Gallery
-        </a>
+        <div className="flex items-center gap-2 md:gap-3">
+          <Link
+            to="/whitelist"
+            className={`rounded-full border px-4 py-2 text-xs font-medium tracking-wider transition-colors duration-300 lg:hidden md:text-sm ${
+              theme === 'light'
+                ? 'border-cream/40 text-cream hover:bg-cream/10'
+                : 'border-ink/20 text-ink hover:bg-ink/5'
+            }`}
+          >
+            Whitelist
+          </Link>
+          <a
+            href="#gallery"
+            className={`rounded-full px-4 py-2 text-xs font-medium tracking-wider transition-colors duration-300 md:text-sm ${styles.cta}`}
+          >
+            Enter Gallery
+          </a>
+        </div>
       </div>
     </header>
   )
