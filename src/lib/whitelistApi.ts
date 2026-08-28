@@ -18,6 +18,13 @@ export type LeaderboardRow = {
   created_at: string
 }
 
+function getClient() {
+  if (!supabase) {
+    throw new Error('Whitelist is temporarily unavailable. Please try again later.')
+  }
+  return supabase
+}
+
 export async function submitEntry({
   twitter,
   wallet,
@@ -29,7 +36,8 @@ export async function submitEntry({
   replyLink: string
   referredBy?: string | null
 }): Promise<WhitelistEntry> {
-  const { data: existing } = await supabase
+  const client = getClient()
+  const { data: existing } = await client
     .from('whitelist_entries')
     .select('id, twitter, wallet')
     .or(`twitter.eq.${twitter},wallet.eq.${wallet}`)
@@ -44,7 +52,7 @@ export async function submitEntry({
 
   const referralCode = generateReferralCode(twitter)
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from('whitelist_entries')
     .insert({
       twitter,
@@ -60,14 +68,14 @@ export async function submitEntry({
   if (!data?.[0]) throw new Error('Failed to create entry')
 
   if (referredBy) {
-    const { data: referrer } = await supabase
+    const { data: referrer } = await client
       .from('whitelist_entries')
       .select('id, points')
       .eq('referral_code', referredBy)
       .single()
 
     if (referrer) {
-      await supabase
+      await client
         .from('whitelist_entries')
         .update({ points: referrer.points + 50 })
         .eq('referral_code', referredBy)
@@ -78,7 +86,8 @@ export async function submitEntry({
 }
 
 export async function getLeaderboard(limit = 50, offset = 0): Promise<LeaderboardRow[]> {
-  const { data, error } = await supabase
+  const client = getClient()
+  const { data, error } = await client
     .from('whitelist_entries')
     .select('twitter, points, created_at')
     .order('points', { ascending: false })
@@ -89,7 +98,8 @@ export async function getLeaderboard(limit = 50, offset = 0): Promise<Leaderboar
 }
 
 export async function getTotalCount(): Promise<number> {
-  const { count, error } = await supabase
+  const client = getClient()
+  const { count, error } = await client
     .from('whitelist_entries')
     .select('*', { count: 'exact', head: true })
 
