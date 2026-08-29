@@ -1,5 +1,5 @@
 const FOLLOW_URL = 'https://x.com/LuxoraRH'
-const POST_URL = 'https://x.com/LuxoraRH/status/2090145097346437402?s=20'
+const POST_URL = 'https://x.com/LuxoraRH/status/2093596973446332792'
 
 type TaskListProps = {
   tasks: boolean[]
