@@ -139,7 +139,7 @@ export function Leaderboard({ onEnterRaffle, dbReady }: LeaderboardProps) {
         <h1 className="font-display text-3xl tracking-[0.12em] text-cream md:text-4xl">
           LEADERBOARD
         </h1>
-        <p className="mt-2 text-sm text-cream/70">Top 1000 get GTD Whitelist</p>
+        <p className="mt-2 text-sm text-cream/70">Top 100 get GTD Whitelist</p>
       </header>
 
       {error && (

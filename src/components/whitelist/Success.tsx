@@ -54,7 +54,7 @@ export function Success({ entry, onViewLeaderboard }: SuccessProps) {
           <li className="flex gap-3">
             <span className="text-lg">🥇</span>
             <div>
-              <p className="font-medium text-cream">Top 1000 by points</p>
+              <p className="font-medium text-cream">Top 100 by points</p>
               <p className="text-cream/60">Guaranteed Whitelist</p>
             </div>
           </li>
